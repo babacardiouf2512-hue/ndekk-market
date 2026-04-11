@@ -1,12 +1,763 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ndëkk Market 🇸🇳</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ndëkk Market 🇸🇳</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #C9A84C; --gold-light: #E8C878; --gold-dim: rgba(201,168,76,0.15);
+      --bg: #0A0A0A; --surface: #111111; --surface2: #1A1A1A; --surface3: #222222;
+      --text: #F5F0E8; --text2: #A09080; --text3: #6A5A4A;
+      --border: rgba(201,168,76,0.12); --border2: rgba(255,255,255,0.06);
+      --success: #50C878; --danger: #E05050;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { overflow-x: hidden; max-width: 100vw; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+    .display { font-family: 'Cormorant Garamond', serif; }
+
+    /* NAV */
+    .nav { background: rgba(10,10,10,0.97); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; padding: 0 16px; }
+    .nav-top { display: flex; align-items: center; justify-content: space-between; height: 52px; }
+    .logo { font-family: 'Cormorant Garamond', serif; color: var(--gold); font-size: 1.3rem; font-weight: 700; cursor: pointer; line-height: 1; }
+    .logo-sub { font-size: 0.55rem; color: var(--text3); letter-spacing: 0.18em; font-family: 'DM Sans', sans-serif; font-weight: 400; }
+    .nav-tabs { display: flex; gap: 2px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab { flex-shrink: 0; background: none; border: none; color: var(--text3); padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 500; font-family: 'DM Sans', sans-serif; }
+    .nav-tab.active { background: var(--gold-dim); color: var(--gold); }
+    .nav-right { display: flex; gap: 8px; align-items: center; }
+    .btn-gold { background: var(--gold); color: #0A0A0A; border: none; padding: 7px 14px; border-radius: 8px; font-weight: 600; font-size: 0.78rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text2); padding: 7px 12px; border-radius: 8px; font-size: 0.78rem; cursor: pointer; font-family: 'DM Sans', sans-serif; position: relative; }
+    .cart-badge { position: absolute; top: -4px; right: -4px; background: var(--gold); color: #0A0A0A; border-radius: 50%; width: 15px; height: 15px; font-size: 0.58rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+    /* PAGES */
+    .page { display: none; }
+    .page.active { display: block; }
+    .page-wrap { max-width: 700px; margin: 0 auto; padding: 22px 14px; }
+
+    /* HERO */
+    .hero { background: var(--bg); padding: 50px 16px 40px; text-align: center; position: relative; overflow: hidden; }
+    .hero-pattern { position: absolute; inset: 0; background-image: repeating-linear-gradient(45deg,rgba(201,168,76,0.03) 0,rgba(201,168,76,0.03) 1px,transparent 0,transparent 50%); background-size: 18px 18px; pointer-events: none; }
+    .hero-eyebrow { font-size: 0.7rem; letter-spacing: 0.28em; color: var(--gold); font-weight: 500; margin-bottom: 16px; text-transform: uppercase; }
+    .hero-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.2rem, 8vw, 4.5rem); font-weight: 700; color: var(--text); line-height: 1.08; margin-bottom: 14px; }
+    .hero-title em { color: var(--gold); font-style: italic; }
+    .hero-sub { color: var(--text3); font-size: 0.9rem; max-width: 340px; margin: 0 auto 28px; line-height: 1.65; font-weight: 300; }
+    .hero-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+    .btn-primary { background: var(--gold); color: #0A0A0A; padding: 11px 28px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; font-size: 0.9rem; font-family: 'DM Sans', sans-serif; }
+    .btn-secondary { background: transparent; color: var(--text); padding: 11px 28px; border-radius: 10px; font-weight: 500; border: 1px solid var(--border2); cursor: pointer; font-size: 0.9rem; font-family: 'DM Sans', sans-serif; }
+    .stats-bar { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .stat { text-align: center; padding: 14px 4px; border-right: 1px solid rgba(201,168,76,0.08); }
+    .stat strong { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: var(--gold); display: block; }
+    .stat span { font-size: 0.6rem; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; display: block; }
+
+    /* PRODUCTS */
+    .section-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+    .section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 700; }
+    .see-all { background: none; border: none; color: var(--gold); font-size: 0.78rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .prod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(min-width:600px){ .prod-grid { grid-template-columns: repeat(3,1fr); } }
+    @media(min-width:900px){ .prod-grid { grid-template-columns: repeat(4,1fr); } }
+    .pcard { background: var(--surface); border: 1px solid var(--border2); border-radius: 13px; overflow: hidden; cursor: pointer; }
+    .pcard.boosted { border-color: rgba(201,168,76,0.5); }
+    .pcard-thumb { background: var(--surface2); height: 110px; display: flex; align-items: center; justify-content: center; font-size: 3rem; position: relative; }
+    .pcard-badge { position: absolute; top: 7px; left: 7px; font-size: 0.6rem; font-weight: 700; padding: 2px 7px; border-radius: 5px; color: #0A0A0A; }
+    .badge-gold { background: var(--gold); }
+    .badge-purple { background: #A78BFA; color: white; }
+    .pcard-body { padding: 10px; }
+    .pcard-vendor { font-size: 0.68rem; color: var(--text3); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pcard-name { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 4px; line-height: 1.2; }
+    .pcard-price { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 700; color: var(--gold); }
+    .pcard-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .stars { color: var(--gold); font-size: 11px; }
+    .add-btn { background: var(--surface2); color: var(--gold); border: 1px solid var(--border); padding: 5px 10px; border-radius: 7px; font-size: 0.72rem; cursor: pointer; font-weight: 600; font-family: 'DM Sans', sans-serif; }
+
+    /* VENDORS */
+    .vcard { background: var(--surface); border: 1px solid var(--border2); border-radius: 13px; padding: 16px; cursor: pointer; margin-bottom: 11px; }
+    .vcard.premium { border-color: rgba(201,168,76,0.4); }
+    .vcard-top { display: flex; gap: 12px; align-items: flex-start; }
+    .vcard-avatar { width: 46px; height: 46px; background: var(--surface2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; }
+    .vcard-name { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .vcard-city { font-size: 0.72rem; color: var(--text3); margin-bottom: 5px; }
+    .vcard-bio { font-size: 0.78rem; color: var(--text2); line-height: 1.5; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .vcard-stats { display: flex; gap: 16px; }
+    .vcard-stat { font-size: 0.72rem; color: var(--text3); }
+    .vcard-stat strong { color: var(--text2); display: block; font-size: 0.82rem; }
+    .badge { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; padding: 2px 8px; font-size: 0.65rem; font-weight: 700; display: inline-block; margin-right: 4px; margin-bottom: 4px; }
+    .badge-v { background: rgba(167,139,250,0.15); color: #A78BFA; border-color: rgba(167,139,250,0.3); }
+
+    /* SEARCH */
+    .search-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 9px 14px; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .search-bar input { flex: 1; border: none; background: none; color: var(--text); font-size: 0.88rem; outline: none; font-family: 'DM Sans', sans-serif; }
+    .search-bar input::placeholder { color: var(--text3); }
+    .cats-scroll { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 18px; scrollbar-width: none; }
+    .cats-scroll::-webkit-scrollbar { display: none; }
+    .cat-pill { flex-shrink: 0; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: 0.78rem; font-weight: 500; color: var(--text2); white-space: nowrap; font-family: 'DM Sans', sans-serif; }
+    .cat-pill.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+    /* BOOST */
+    .boost-card { background: var(--surface); border-radius: 13px; padding: 16px; border: 1px solid; margin-bottom: 11px; cursor: pointer; }
+    .boost-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .boost-label { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+    .boost-price { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; }
+    .boost-period { font-size: 0.68rem; color: var(--text3); }
+    .boost-desc { font-size: 0.78rem; color: var(--text2); margin-bottom: 11px; }
+    .boost-btn { width: 100%; padding: 8px; border: none; border-radius: 8px; color: #0A0A0A; font-weight: 700; font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+    /* ADMIN */
+    .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 22px; }
+    .kpi { background: var(--surface); border: 1px solid var(--border2); border-radius: 11px; padding: 15px; }
+    .kpi strong { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: var(--gold); display: block; line-height: 1; margin-bottom: 4px; }
+    .kpi span { font-size: 0.68rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; }
+    .table { background: var(--surface); border: 1px solid var(--border2); border-radius: 11px; overflow: hidden; }
+    .table-head { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; padding: 9px 13px; background: var(--surface2); font-size: 0.66rem; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; }
+    .table-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; padding: 9px 13px; border-bottom: 1px solid var(--border2); font-size: 0.8rem; align-items: center; }
+    .table-row:last-child { border-bottom: none; }
+    .amount { color: var(--success); font-weight: 600; }
+    .wave-config { background: var(--surface); border-radius: 13px; padding: 16px; margin-bottom: 20px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .projection { background: linear-gradient(135deg,#150e00,#241800); border: 1px solid var(--gold); border-radius: 13px; padding: 18px; margin-top: 18px; text-align: center; }
+
+    /* FORMS */
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; font-size: 0.7rem; font-weight: 600; color: var(--text3); margin-bottom: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .form-input { width: 100%; padding: 10px 13px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 9px; color: var(--text); font-size: 0.88rem; font-family: 'DM Sans', sans-serif; outline: none; }
+    .form-input:focus { border-color: var(--gold); }
+    .form-select { width: 100%; padding: 10px 13px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 9px; color: var(--text); font-size: 0.88rem; font-family: 'DM Sans', sans-serif; outline: none; }
+    .form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* MODALS */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+    .overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 22px 18px; width: 100%; max-width: 460px; max-height: 88vh; overflow-y: auto; }
+    .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 1.35rem; font-weight: 700; margin-bottom: 14px; }
+    .modal-btns { display: flex; gap: 9px; margin-top: 14px; }
+    .btn-cancel { flex: 1; padding: 10px; border-radius: 9px; border: 1px solid var(--border); background: none; font-weight: 500; cursor: pointer; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; }
+    .btn-wave { flex: 2; padding: 10px; border-radius: 9px; border: none; background: #0066CC; color: white; font-weight: 700; font-size: 0.88rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .wave-box { background: rgba(0,102,204,0.08); border: 1px solid rgba(0,102,204,0.2); border-radius: 12px; padding: 16px; text-align: center; margin: 14px 0; }
+    .cart-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border2); }
+    .cart-total { padding-top: 12px; display: flex; justify-content: space-between; font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 700; color: var(--gold); }
+
+    /* AUTH */
+    .auth-wrap { min-height: calc(100vh - 100px); display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+    .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 28px 22px; width: 100%; max-width: 400px; }
+    .auth-tabs { display: flex; background: var(--surface2); border-radius: 10px; padding: 3px; margin-bottom: 22px; }
+    .auth-tab { flex: 1; padding: 8px; border-radius: 8px; border: none; background: none; color: var(--text2); font-size: 0.82rem; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .auth-tab.active { background: var(--surface3); color: var(--text); }
+    .avatar-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px; }
+    .av-opt { width: 38px; height: 38px; border-radius: 9px; background: var(--surface2); border: 2px solid var(--border2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+    .av-opt.sel { border-color: var(--gold); background: var(--gold-dim); }
+
+    /* TOAST */
+    .toast-wrap { position: fixed; bottom: 24px; left: 0; right: 0; display: flex; justify-content: center; z-index: 999; pointer-events: none; }
+    .toast { padding: 10px 20px; border-radius: 50px; font-size: 0.82rem; font-weight: 500; border: 1px solid; white-space: nowrap; opacity: 0; transition: opacity 0.3s; font-family: 'DM Sans', sans-serif; }
+    .toast.show { opacity: 1; }
+    .toast.success { background: rgba(80,200,120,0.1); color: var(--success); border-color: rgba(80,200,120,0.2); }
+    .toast.error { background: rgba(224,80,80,0.1); color: var(--danger); border-color: rgba(224,80,80,0.2); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-top">
+    <div class="logo" onclick="goTo('home')">
+      Ndëkk Market
+      <div class="logo-sub">SÉNÉGAL · MARKETPLACE</div>
+    </div>
+    <div class="nav-right">
+      <span id="user-display" style="font-size:0.78rem;color:var(--text2);display:none"></span>
+      <button class="btn-ghost" id="btn-vendre" onclick="goTo('auth')">Vendre</button>
+      <button class="btn-ghost" onclick="openCart()" style="position:relative">🛒<span class="cart-badge" id="cart-count" style="display:none">0</span></button>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="tab-home" onclick="goTo('home')">Accueil</button>
+    <button class="nav-tab" id="tab-market" onclick="goTo('market')">Marché</button>
+    <button class="nav-tab" id="tab-vendors" onclick="goTo('vendors')">Vendeurs</button>
+    <button class="nav-tab" id="tab-vendeur-space" onclick="goTo('vendeur-space')" style="display:none">Mon Espace</button>
+    <button class="nav-tab" id="tab-admin" onclick="goTo('admin')">Admin</button>
+  </div>
+</nav>
+
+<!-- PAGES -->
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-pattern"></div>
+    <div style="position:relative">
+      <div class="hero-eyebrow">🇸🇳 La marketplace du Sénégal</div>
+      <h1 class="hero-title">Le marché de chez nous,<br><em>en ligne.</em></h1>
+      <p class="hero-sub">Achetez et vendez localement. Mode, alimentation, électronique — tout depuis votre ville.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="goTo('market')">Découvrir le marché</button>
+        <button class="btn-secondary" onclick="goTo('auth')">Devenir vendeur</button>
+      </div>
+    </div>
+  </div>
+  <div class="stats-bar">
+    <div class="stat"><strong>1 240</strong><span>Vendeurs</span></div>
+    <div class="stat"><strong>14</strong><span>Villes</span></div>
+    <div class="stat"><strong>98%</strong><span>Satisfaction</span></div>
+    <div class="stat"><strong>Wave</strong><span>Paiement</span></div>
+  </div>
+  <div class="page-wrap">
+    <div class="section-header">
+      <div class="section-title">En vedette</div>
+      <button class="see-all" onclick="goTo('market')">Voir tout →</button>
+    </div>
+    <div class="prod-grid" id="home-products"></div>
+    <div class="section-header" style="margin-top:28px">
+      <div class="section-title">Vendeurs de confiance</div>
+      <button class="see-all" onclick="goTo('vendors')">Voir tous →</button>
+    </div>
+    <div id="home-vendors"></div>
+  </div>
+</div>
+
+<!-- MARKET -->
+<div class="page" id="page-market">
+  <div class="page-wrap">
+    <div class="section-header">
+      <div class="section-title">Tous les produits</div>
+      <span style="font-size:0.72rem;color:var(--text3)" id="result-count"></span>
+    </div>
+    <div class="search-bar">
+      <span style="color:var(--text3)">🔍</span>
+      <input placeholder="Rechercher..." id="search-input" oninput="filterProducts()">
+    </div>
+    <div class="cats-scroll" id="cats-bar"></div>
+    <div class="prod-grid" id="market-products"></div>
+  </div>
+</div>
+
+<!-- VENDORS -->
+<div class="page" id="page-vendors">
+  <div class="page-wrap">
+    <div class="section-title" style="margin-bottom:16px">Tous les vendeurs</div>
+    <div id="all-vendors"></div>
+  </div>
+</div>
+
+<!-- VENDOR PROFILE -->
+<div class="page" id="page-vendor-profile">
+  <div style="background:var(--surface);border-bottom:1px solid var(--border2);padding:22px 16px" id="vendor-profile-hero"></div>
+  <div class="page-wrap">
+    <div class="section-title" style="margin-bottom:16px" id="vendor-profile-title"></div>
+    <div class="prod-grid" id="vendor-profile-products"></div>
+  </div>
+</div>
+
+<!-- PRODUCT DETAIL -->
+<div class="page" id="page-product">
+  <div class="page-wrap" id="product-detail"></div>
+</div>
+
+<!-- AUTH -->
+<div class="page" id="page-auth">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h2 class="display" style="font-size:1.8rem;font-weight:700;margin-bottom:4px" id="auth-title">Bon retour 👋</h2>
+      <p style="font-size:0.8rem;color:var(--text3);margin-bottom:22px" id="auth-sub">Connecte-toi à ton espace vendeur</p>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchAuth('login')">Connexion</button>
+        <button class="auth-tab" id="tab-register" onclick="switchAuth('register')">Inscription</button>
+      </div>
+      <div id="register-fields" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Ton avatar</label>
+          <div class="avatar-row" id="avatar-picker"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nom complet *</label>
+          <input class="form-input" id="auth-name" placeholder="Mamadou Diallo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ville</label>
+          <select class="form-select" id="auth-city">
+            <option>Dakar</option><option>Saint-Louis</option><option>Thiès</option>
+            <option>Kaolack</option><option>Ziguinchor</option><option>Touba</option><option>Mbour</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Numéro de téléphone *</label>
+        <input class="form-input" id="auth-phone" placeholder="77 123 45 67">
+      </div>
+      <button class="btn-primary" style="width:100%;padding:13px;margin-top:8px" onclick="handleAuth()" id="auth-btn">Se connecter →</button>
+      <p style="text-align:center;font-size:0.73rem;color:var(--text3);margin-top:14px">
+        <span id="auth-switch-text">Pas encore vendeur ? </span>
+        <span style="color:var(--gold);cursor:pointer" onclick="switchAuth(authMode==='login'?'register':'login')" id="auth-switch-link">S'inscrire</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- VENDEUR SPACE -->
+<div class="page" id="page-vendeur-space">
+  <div class="page-wrap">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;background:var(--surface);border-radius:13px;padding:14px;border:1px solid var(--border)" id="vendeur-welcome"></div>
+    <div class="section-title" style="font-size:1.2rem;margin-bottom:6px">🚀 Booster ma visibilité</div>
+    <p style="font-size:0.78rem;color:var(--text3);margin-bottom:14px">Paiement sécurisé via Wave 🌊</p>
+    <div id="boost-list"></div>
+    <div class="section-title" style="font-size:1.2rem;margin-top:8px;margin-bottom:12px">📦 Publier un produit</div>
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:13px;padding:16px">
+      <div class="form-group"><label class="form-label">Nom du produit *</label><input class="form-input" id="p-name" placeholder="Ex: Boubou brodé..."></div>
+      <div class="form-row2">
+        <div class="form-group"><label class="form-label">Prix (FCFA) *</label><input class="form-input" type="number" id="p-price" placeholder="5000"></div>
+        <div class="form-group"><label class="form-label">Emoji</label><input class="form-input" id="p-emoji" placeholder="📦"></div>
+      </div>
+      <div class="form-row2">
+        <div class="form-group"><label class="form-label">Catégorie</label>
+          <select class="form-select" id="p-cat">
+            <option>Mode</option><option>Alimentation</option><option>Électronique</option><option>Maison</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Stock</label><input class="form-input" type="number" id="p-stock" placeholder="10"></div>
+      </div>
+      <button class="btn-gold" style="width:100%;padding:11px;margin-top:4px" onclick="postProduct()">🚀 Publier maintenant</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="page" id="page-admin">
+  <div class="page-wrap">
+    <div class="display" style="font-size:1.6rem;font-weight:700;margin-bottom:20px">📊 Tableau de bord</div>
+    <div class="wave-config" id="wave-config-box" style="border:1px solid rgba(201,168,76,0.2)"></div>
+    <div class="kpi-row" id="kpi-row"></div>
+    <div class="display" style="font-size:1.1rem;font-weight:700;margin-bottom:11px">💰 Paiements reçus</div>
+    <div class="table">
+      <div class="table-head"><span>Vendeur</span><span>Boost</span><span>Montant</span><span>Date</span></div>
+      <div id="boost-history"></div>
+    </div>
+    <div class="projection">
+      <div style="font-size:0.68rem;color:var(--text3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px">Projection mensuelle</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:700;color:var(--gold)">240 000 FCFA</div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:4px">avec 100 vendeurs · 20% boostés</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="modal-boost">
+  <div class="modal">
+    <div class="modal-title">🌊 Payer via Wave</div>
+    <div class="wave-box" id="boost-modal-content"></div>
+    <p style="font-size:0.78rem;color:var(--text3);text-align:center">Tu seras redirigé vers l'app Wave pour confirmer.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modal-boost')">Annuler</button>
+      <button class="btn-wave" onclick="confirmBoost()">🌊 Payer maintenant</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-cart">
+  <div class="modal">
+    <div class="modal-title" id="cart-title">🛒 Panier</div>
+    <div id="cart-items"></div>
+    <div class="cart-total" id="cart-total-row" style="display:none">
+      <span>Total</span><span id="cart-total-amount"></span>
+    </div>
+    <button class="btn-wave" style="width:100%;margin-top:12px;padding:12px" onclick="payCart()" id="btn-pay-cart">🌊 Payer via Wave</button>
+    <button class="btn-cancel" style="width:100%;margin-top:9px" onclick="closeModal('modal-cart')">Fermer</button>
+  </div>
+</div>
+
+<div class="toast-wrap"><div class="toast" id="toast"></div></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+let vendors = [
+  {id:1,name:"Fatou Couture",phone:"77 123 45 67",city:"Dakar",avatar:"👩🏾",bio:"Créatrice de mode depuis 2015. Spécialiste boubous et tenues traditionnelles.",verified:true,premium:true,sales:234,rating:4.9,joined:"Jan 2023"},
+  {id:2,name:"Tech Mbaye",phone:"76 987 65 43",city:"Dakar",avatar:"👨🏾‍💻",bio:"Revendeur officiel Samsung & Tecno. Garantie 6 mois sur tous les appareils.",verified:true,premium:true,sales:87,rating:4.7,joined:"Mar 2023"},
+  {id:3,name:"Maman Rokhaya",phone:"78 456 78 90",city:"Saint-Louis",avatar:"👩🏾‍🍳",bio:"Cuisine traditionnelle sénégalaise. Livraison possible dans Saint-Louis.",verified:false,premium:false,sales:412,rating:5.0,joined:"Juil 2023"},
+  {id:4,name:"Artisan Gaye",phone:"70 321 09 87",city:"Mbour",avatar:"👨🏾‍🎨",bio:"Artisan vannier depuis 20 ans. Pièces uniques faites à la main.",verified:true,premium:false,sales:156,rating:4.8,joined:"Avr 2023"},
+];
+let products = [
+  {id:1,name:"Boubou brodé Premium",price:45000,vendorId:1,category:"Mode",emoji:"👘",rating:4.9,reviews:28,boosted:true,boostType:"vedette",stock:5},
+  {id:2,name:"Thiébou dieune royal",price:5500,vendorId:3,category:"Alimentation",emoji:"🍚",rating:5.0,reviews:94,boosted:false,stock:20},
+  {id:3,name:"Samsung Galaxy A55",price:185000,vendorId:2,category:"Électronique",emoji:"📱",rating:4.8,reviews:12,boosted:true,boostType:"premium",stock:3},
+  {id:4,name:"Tissu wax Holland 6y",price:12000,vendorId:1,category:"Mode",emoji:"🎨",rating:4.9,reviews:67,boosted:false,stock:15},
+  {id:5,name:"Mangues Casamance 5kg",price:3500,vendorId:3,category:"Alimentation",emoji:"🥭",rating:4.7,reviews:140,boosted:false,stock:30},
+  {id:6,name:"Panier osier XL",price:8500,vendorId:4,category:"Maison",emoji:"🧺",rating:4.8,reviews:45,boosted:true,boostType:"vedette",stock:8},
+  {id:7,name:"Thiouraye luxe",price:3200,vendorId:4,category:"Maison",emoji:"🌿",rating:4.9,reviews:203,boosted:false,stock:50},
+  {id:8,name:"Chaussures cuir Dakar",price:28000,vendorId:1,category:"Mode",emoji:"👞",rating:4.6,reviews:33,boosted:false,stock:7},
+];
+const reviews = [
+  {id:1,productId:1,author:"Aminata S.",avatar:"👩🏾",rating:5,text:"Qualité exceptionnelle, couture parfaite. Je recommande vivement !",date:"2 jours"},
+  {id:2,productId:1,author:"Moussa D.",avatar:"👨🏾",rating:5,text:"Magnifique boubou, livré rapidement. Vendeur sérieux.",date:"1 semaine"},
+  {id:3,productId:3,author:"Ibrahima F.",avatar:"👨🏾‍💼",rating:4,text:"Téléphone comme décrit, garantie respectée.",date:"3 jours"},
+  {id:4,productId:2,author:"Ndéye M.",avatar:"👩🏾‍🦱",rating:5,text:"Le meilleur thiébou de Saint-Louis ! Ma famille adore.",date:"5 jours"},
+];
+const boosts = [
+  {id:"vedette",label:"⭐ Produit Vedette",price:3000,period:"semaine",desc:"1ère position + badge doré",color:"#C9A84C"},
+  {id:"premium",label:"💎 Vendeur Premium",price:12000,period:"mois",desc:"Badge certifié + vitrine pro",color:"#A78BFA"},
+  {id:"banniere",label:"📢 Bannière Pub",price:35000,period:"mois",desc:"Visible par tous les visiteurs",color:"#34D399"},
+  {id:"notif",label:"🔔 Push Sponsorisé",price:3000,period:"envoi",desc:"Notification à tous les users",color:"#F87171"},
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let cart = [];
+let currentUser = null;
+let activeCategory = "Tout";
+let revenue = 47000;
+let wavePhone = "", waveName = "", waveReady = false;
+let selectedAvatar = "👤";
+let currentBoost = null;
+let authMode = "login";
+let boostHistory = [
+  {vendor:"Fatou Couture",plan:"⭐ Vedette",amount:3000,date:"08 Avr"},
+  {vendor:"Tech Mbaye",plan:"💎 Premium",amount:12000,date:"05 Avr"},
+];
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function stars(r){ return "★".repeat(Math.floor(r))+"☆".repeat(5-Math.floor(r)); }
+function fmt(n){ return Number(n).toLocaleString("fr-FR"); }
+function vendorOf(id){ return vendors.find(v=>v.id===id)||{}; }
+function waveLink(phone,name,amount,desc){
+  return `https://pay.wave.com/m/${phone.replace(/\D/g,"")}?amount=${amount}&note=${encodeURIComponent("Ndëkk Market - "+desc+" - "+name)}`;
+}
+function showToast(msg,type="success"){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.className="toast show "+type;
+  setTimeout(()=>t.className="toast",3000);
+}
+function updateCartBadge(){
+  const b=document.getElementById("cart-count");
+  if(cart.length>0){b.style.display="flex";b.textContent=cart.length;}
+  else b.style.display="none";
+}
+function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────────
+function goTo(page){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("page-"+page).classList.add("active");
+  const tab=document.getElementById("tab-"+page);
+  if(tab) tab.classList.add("active");
+  window.scrollTo(0,0);
+  if(page==="home") renderHome();
+  if(page==="market") renderMarket();
+  if(page==="vendors") renderVendors();
+  if(page==="admin") renderAdmin();
+  if(page==="vendeur-space") renderVendeurSpace();
+}
+
+// ── RENDER HELPERS ─────────────────────────────────────────────────────────────
+function productCard(p, onclick){
+  const v=vendorOf(p.vendorId);
+  const badge = p.boosted ? `<span class="pcard-badge ${p.boostType==="premium"?"badge-purple":"badge-gold"}">${p.boostType==="premium"?"💎":"⭐"}</span>` : "";
+  return `<div class="pcard ${p.boosted?"boosted":""}" onclick="${onclick}">
+    <div class="pcard-thumb">${p.emoji}${badge}</div>
+    <div class="pcard-body">
+      <div class="pcard-vendor">${v.avatar||""} ${v.name||""}</div>
+      <div class="pcard-name">${p.name}</div>
+      <div class="pcard-price">${fmt(p.price)} FCFA</div>
+      <div class="pcard-foot">
+        <span class="stars">${stars(p.rating)} <span style="color:var(--text3);font-size:10px">${p.rating}</span></span>
+        <button class="add-btn" onclick="event.stopPropagation();addCart(${p.id})">+</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function vendorCard(v, onclick){
+  return `<div class="vcard ${v.premium?"premium":""}" onclick="${onclick}">
+    <div class="vcard-top">
+      <div class="vcard-avatar">${v.avatar}</div>
+      <div style="flex:1;min-width:0">
+        <div class="vcard-name">${v.name}</div>
+        <div class="vcard-city">📍 ${v.city}</div>
+        <div>${v.verified?'<span class="badge">✓ Vérifié</span>':""} ${v.premium?'<span class="badge badge-v">💎 Premium</span>':""}</div>
+      </div>
+    </div>
+    <div class="vcard-bio">${v.bio}</div>
+    <div class="vcard-stats">
+      <div class="vcard-stat"><strong>${v.sales}</strong>ventes</div>
+      <div class="vcard-stat"><strong>⭐ ${v.rating}</strong>note</div>
+      <div class="vcard-stat"><strong>${products.filter(p=>p.vendorId===v.id).length}</strong>produits</div>
+    </div>
+  </div>`;
+}
+
+// ── RENDER PAGES ───────────────────────────────────────────────────────────────
+function renderHome(){
+  const boosted = [...products].sort((a,b)=>(b.boosted?1:0)-(a.boosted?1:0)).filter(p=>p.boosted);
+  document.getElementById("home-products").innerHTML = boosted.map(p=>productCard(p,`openProduct(${p.id})`)).join("");
+  document.getElementById("home-vendors").innerHTML = vendors.filter(v=>v.verified).map(v=>vendorCard(v,`openVendor(${v.id})`)).join("");
+}
+
+function renderMarket(){
+  const cats = ["Tout","Mode","Alimentation","Électronique","Maison"];
+  document.getElementById("cats-bar").innerHTML = cats.map(c=>`<button class="cat-pill ${activeCategory===c?"active":""}" onclick="setCategory('${c}')">${c}</button>`).join("");
+  filterProducts();
+}
+
+function filterProducts(){
+  const q = (document.getElementById("search-input")||{value:""}).value.toLowerCase();
+  const sorted = [...products].sort((a,b)=>(b.boosted?1:0)-(a.boosted?1:0));
+  const filtered = sorted.filter(p=>{
+    const matchCat = activeCategory==="Tout"||p.category===activeCategory;
+    const matchQ = p.name.toLowerCase().includes(q);
+    return matchCat&&matchQ;
+  });
+  document.getElementById("market-products").innerHTML = filtered.map(p=>productCard(p,`openProduct(${p.id})`)).join("");
+  document.getElementById("result-count").textContent = filtered.length+" résultats";
+}
+
+function setCategory(cat){
+  activeCategory=cat;
+  document.querySelectorAll(".cat-pill").forEach(b=>{
+    b.classList.toggle("active",b.textContent===cat);
+  });
+  filterProducts();
+}
+
+function renderVendors(){
+  document.getElementById("all-vendors").innerHTML = vendors.map(v=>vendorCard(v,`openVendor(${v.id})`)).join("");
+}
+
+function openVendor(id){
+  const v=vendorOf(id);
+  document.getElementById("vendor-profile-hero").innerHTML=`
+    <button onclick="goTo('vendors')" style="background:none;border:none;color:var(--text3);font-size:0.78rem;cursor:pointer;margin-bottom:14px;font-family:'DM Sans',sans-serif">← Retour</button>
+    <div style="display:flex;gap:14px;align-items:flex-start">
+      <div style="width:64px;height:64px;background:var(--surface2);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:2.2rem;flex-shrink:0">${v.avatar}</div>
+      <div style="flex:1;min-width:0">
+        <h1 style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:var(--text);margin-bottom:6px">${v.name}</h1>
+        <div style="margin-bottom:8px">${v.verified?'<span class="badge">✓ Vérifié</span>':""} ${v.premium?'<span class="badge badge-v">💎 Premium</span>':""} <span class="badge" style="color:var(--text3);border-color:var(--border)">📍 ${v.city}</span></div>
+        <p style="font-size:0.82rem;color:var(--text2);line-height:1.6">${v.bio}</p>
+        <div style="display:flex;gap:20px;margin-top:12px">
+          <div><div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold);font-weight:700">${v.sales}</div><div style="font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em">Ventes</div></div>
+          <div><div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold);font-weight:700">⭐ ${v.rating}</div><div style="font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em">Note</div></div>
+          <div><div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold);font-weight:700">${products.filter(p=>p.vendorId===v.id).length}</div><div style="font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em">Produits</div></div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById("vendor-profile-title").textContent="Ses produits";
+  document.getElementById("vendor-profile-products").innerHTML = products.filter(p=>p.vendorId===id).map(p=>productCard(p,`openProduct(${p.id})`)).join("");
+  goTo("vendor-profile");
+}
+
+function openProduct(id){
+  const p=products.find(x=>x.id===id);
+  const v=vendorOf(p.vendorId);
+  const rev=reviews.filter(r=>r.productId===id);
+  document.getElementById("product-detail").innerHTML=`
+    <button onclick="goTo('market')" style="background:none;border:none;color:var(--text3);font-size:0.78rem;cursor:pointer;margin-bottom:16px;font-family:'DM Sans',sans-serif">← Retour</button>
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;height:200px;display:flex;align-items:center;justify-content:center;font-size:6rem;margin-bottom:18px">${p.emoji}</div>
+    ${p.boosted?`<div style="margin-bottom:10px"><span class="badge">${p.boostType==="premium"?"💎 Vendeur Premium":"⭐ Produit Vedette"}</span></div>`:""}
+    <h1 style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;color:var(--text);margin-bottom:6px;line-height:1.15">${p.name}</h1>
+    <div style="margin-bottom:8px"><span class="stars">${stars(p.rating)}</span> <span style="font-size:0.72rem;color:var(--text3)">${p.reviews} avis</span></div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--gold);font-weight:700;margin-bottom:16px">${fmt(p.price)} FCFA</div>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:10px;padding:11px 13px;cursor:pointer;margin-bottom:14px" onclick="openVendor(${v.id})">
+      <span style="font-size:1.6rem">${v.avatar}</span>
+      <div style="flex:1"><div style="font-weight:600;font-size:0.85rem;color:var(--text)">${v.name}</div><div style="font-size:0.7rem;color:var(--text3)">📍 ${v.city} · ${v.sales} ventes</div></div>
+      ${v.verified?'<span class="badge">✓</span>':""}
+      <span style="color:var(--text3)">→</span>
+    </div>
+    <div style="font-size:0.75rem;color:var(--text3);margin-bottom:16px">📦 Stock : ${p.stock} · ${p.category}</div>
+    <button class="btn-primary" style="width:100%;padding:13px" onclick="addCart(${p.id});showToast('${p.emoji} Ajouté au panier !')">Ajouter au panier</button>
+    <div style="margin-top:28px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;margin-bottom:12px">Avis (${rev.length})</div>
+      ${rev.length===0?'<p style="color:var(--text3);font-size:0.82rem">Aucun avis pour ce produit.</p>':rev.map(r=>`
+        <div style="background:var(--surface);border:1px solid var(--border2);border-radius:11px;padding:14px;margin-bottom:9px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+            <span style="font-size:1.2rem">${r.avatar}</span>
+            <span style="font-weight:600;font-size:0.85rem;color:var(--text)">${r.author}</span>
+            <span class="stars">${stars(r.rating)}</span>
+            <span style="font-size:0.68rem;color:var(--text3);margin-left:auto">il y a ${r.date}</span>
+          </div>
+          <p style="font-size:0.8rem;color:var(--text2);line-height:1.55">${r.text}</p>
+        </div>`).join("")}
+    </div>`;
+  goTo("product");
+}
+
+// ── AUTH ───────────────────────────────────────────────────────────────────────
+function switchAuth(mode){
+  authMode=mode;
+  document.getElementById("register-fields").style.display=mode==="register"?"block":"none";
+  document.getElementById("auth-title").textContent=mode==="login"?"Bon retour 👋":"Rejoins Ndëkk";
+  document.getElementById("auth-sub").textContent=mode==="login"?"Connecte-toi à ton espace vendeur":"Crée ton compte vendeur gratuitement";
+  document.getElementById("auth-btn").textContent=mode==="login"?"Se connecter →":"Créer mon compte →";
+  document.getElementById("auth-switch-text").textContent=mode==="login"?"Pas encore vendeur ? ":"Déjà un compte ? ";
+  document.getElementById("auth-switch-link").textContent=mode==="login"?"S'inscrire":"Se connecter";
+  document.getElementById("tab-login").classList.toggle("active",mode==="login");
+  document.getElementById("tab-register").classList.toggle("active",mode==="register");
+  renderAvatarPicker();
+}
+
+function renderAvatarPicker(){
+  const avatars=["👩🏾","👨🏾","👩🏾‍💼","👨🏾‍💼","👩🏾‍🍳","👨🏾‍🎨"];
+  document.getElementById("avatar-picker").innerHTML=avatars.map(a=>`<div class="av-opt ${selectedAvatar===a?"sel":""}" onclick="selectAvatar('${a}')">${a}</div>`).join("");
+}
+
+function selectAvatar(a){
+  selectedAvatar=a;
+  renderAvatarPicker();
+}
+
+function handleAuth(){
+  const phone=document.getElementById("auth-phone").value.trim();
+  if(authMode==="register"){
+    const name=document.getElementById("auth-name").value.trim();
+    const city=document.getElementById("auth-city").value;
+    if(!name||!phone){showToast("Remplis tous les champs","error");return;}
+    const nv={id:vendors.length+1,name,phone,city,avatar:selectedAvatar,bio:"Nouveau vendeur sur Ndëkk Market.",verified:false,premium:false,sales:0,rating:5.0,joined:"Avr 2026"};
+    vendors.push(nv); currentUser=nv;
+    showToast("🎉 Bienvenue "+name+" !");
+  } else {
+    const found=vendors.find(v=>v.phone===phone);
+    if(!found){showToast("Numéro introuvable","error");return;}
+    currentUser=found;
+    showToast("👋 Content de te revoir, "+found.name+" !");
+  }
+  document.getElementById("btn-vendre").style.display="none";
+  document.getElementById("user-display").style.display="block";
+  document.getElementById("user-display").textContent=currentUser.avatar+" "+currentUser.name.split(" ")[0];
+  document.getElementById("tab-vendeur-space").style.display="block";
+  goTo("vendeur-space");
+}
+
+// ── CART ───────────────────────────────────────────────────────────────────────
+function addCart(id){
+  const p=products.find(x=>x.id===id);
+  cart.push(p); updateCartBadge();
+  showToast(p.emoji+" "+p.name+" ajouté !");
+}
+
+function openCart(){
+  const total=cart.reduce((a,b)=>a+b.price,0);
+  if(cart.length===0){
+    document.getElementById("cart-items").innerHTML='<p style="color:var(--text3);text-align:center;padding:22px">Ton panier est vide</p>';
+    document.getElementById("cart-total-row").style.display="none";
+    document.getElementById("btn-pay-cart").style.display="none";
+  } else {
+    document.getElementById("cart-items").innerHTML=cart.map((item,i)=>`
+      <div class="cart-item">
+        <span style="font-size:1.7rem">${item.emoji}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:0.88rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.name}</div>
+          <div style="color:var(--gold);font-weight:600;font-size:0.88rem">${fmt(item.price)} FCFA</div>
+        </div>
+        <button onclick="removeCart(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:1rem;padding:0 4px">✕</button>
+      </div>`).join("");
+    document.getElementById("cart-total-row").style.display="flex";
+    document.getElementById("cart-total-amount").textContent=fmt(total)+" FCFA";
+    document.getElementById("btn-pay-cart").style.display="block";
+  }
+  document.getElementById("cart-title").textContent="🛒 Panier ("+cart.length+")";
+  document.getElementById("modal-cart").classList.add("open");
+}
+
+function removeCart(i){ cart.splice(i,1); updateCartBadge(); openCart(); }
+
+function payCart(){
+  if(!waveReady){showToast("Configure Wave dans Admin","error");closeModal("modal-cart");goTo("admin");return;}
+  const total=cart.reduce((a,b)=>a+b.price,0);
+  window.open(waveLink(wavePhone,waveName,total,"Commande Ndëkk Market"),"_blank");
+  cart=[]; updateCartBadge(); closeModal("modal-cart"); showToast("✅ Redirection Wave !");
+}
+
+// ── BOOSTS ─────────────────────────────────────────────────────────────────────
+function openBoostModal(id){
+  currentBoost=boosts.find(b=>b.id===id);
+  document.getElementById("boost-modal-content").innerHTML=`
+    <div style="font-size:2rem;margin-bottom:4px">🌊</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:700;color:#4CA8F0">${fmt(currentBoost.price)} FCFA</div>
+    <div style="font-size:0.75rem;color:var(--text3);margin-top:3px">${waveReady?"→ vers "+waveName:"⚠️ Configure Wave dans Admin"}</div>
+    <div style="font-size:0.68rem;color:var(--text3);margin-top:2px">${currentBoost.label} · par ${currentBoost.period}</div>`;
+  document.getElementById("modal-boost").classList.add("open");
+}
+
+function confirmBoost(){
+  if(!waveReady){showToast("Configure Wave dans Admin","error");closeModal("modal-boost");goTo("admin");return;}
+  window.open(waveLink(wavePhone,waveName,currentBoost.price,currentBoost.label),"_blank");
+  const d=new Date(), months=["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
+  revenue+=currentBoost.price;
+  boostHistory.unshift({vendor:currentUser?.name||"Vendeur",plan:currentBoost.label,amount:currentBoost.price,date:d.getDate()+" "+months[d.getMonth()]});
+  showToast("✅ Paiement Wave de "+fmt(currentBoost.price)+" FCFA");
+  closeModal("modal-boost");
+  renderAdmin();
+}
+
+// ── VENDEUR SPACE ──────────────────────────────────────────────────────────────
+function renderVendeurSpace(){
+  if(!currentUser){goTo("auth");return;}
+  document.getElementById("vendeur-welcome").innerHTML=`
+    <div style="width:46px;height:46px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.6rem">${currentUser.avatar}</div>
+    <div><div style="font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:var(--text)">Bonjour, ${currentUser.name} 👋</div><div style="font-size:0.72rem;color:var(--text3)">📍 ${currentUser.city}</div></div>`;
+  document.getElementById("boost-list").innerHTML=boosts.map(b=>`
+    <div class="boost-card" style="border-color:${b.color}33;background:${b.color}08" onclick="openBoostModal('${b.id}')">
+      <div class="boost-top">
+        <div class="boost-label">${b.label}</div>
+        <div style="text-align:right"><div class="boost-price" style="color:${b.color}">${fmt(b.price)} F</div><div class="boost-period">/ ${b.period}</div></div>
+      </div>
+      <div class="boost-desc">${b.desc}</div>
+      <button class="boost-btn" style="background:${b.color}">🌊 Payer via Wave</button>
+    </div>`).join("");
+}
+
+function postProduct(){
+  const name=document.getElementById("p-name").value.trim();
+  const price=document.getElementById("p-price").value;
+  if(!name||!price){showToast("Nom et prix requis","error");return;}
+  products.unshift({id:products.length+1,name,price:parseInt(price),vendorId:currentUser?.id||1,category:document.getElementById("p-cat").value,emoji:document.getElementById("p-emoji").value||"📦",rating:5.0,reviews:0,boosted:false,stock:parseInt(document.getElementById("p-stock").value)||10});
+  document.getElementById("p-name").value="";
+  document.getElementById("p-price").value="";
+  document.getElementById("p-emoji").value="";
+  document.getElementById("p-stock").value="";
+  showToast("🚀 Produit publié !");
+}
+
+// ── ADMIN ──────────────────────────────────────────────────────────────────────
+function renderAdmin(){
+  document.getElementById("wave-config-box").innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span class="status-dot" style="background:${waveReady?"var(--success)":"var(--danger)"}"></span>
+      <span style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:var(--text)">🌊 Configuration Wave</span>
+      <span style="font-size:0.68rem;color:${waveReady?"var(--success)":"var(--danger)"}">${waveReady?"Actif":"Non configuré"}</span>
+    </div>
+    ${!waveReady?`
+      <div class="form-row2" style="margin-bottom:11px">
+        <div class="form-group"><label class="form-label">Ton nom</label><input class="form-input" id="w-name" placeholder="Mamadou Diallo"></div>
+        <div class="form-group"><label class="form-label">Numéro Wave</label><input class="form-input" id="w-phone" placeholder="77 123 45 67"></div>
+      </div>
+      <button onclick="saveWave()" style="background:#0066CC;color:white;border:none;padding:10px 22px;border-radius:9px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">🌊 Enregistrer</button>
+    `:`<div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:0.82rem;color:var(--success)">Paiements actifs → <strong>${waveName}</strong> (${wavePhone})</span>
+      <button onclick="waveReady=false;renderAdmin()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.72rem;font-family:'DM Sans',sans-serif">Modifier</button>
+    </div>`}`;
+  document.getElementById("kpi-row").innerHTML=`
+    <div class="kpi"><strong>${fmt(revenue)} F</strong><span>Revenus boosts</span></div>
+    <div class="kpi"><strong>${products.filter(p=>p.boosted).length}</strong><span>Boostés</span></div>
+    <div class="kpi"><strong>${products.length}</strong><span>Produits</span></div>
+    <div class="kpi"><strong>${vendors.length}</strong><span>Vendeurs</span></div>`;
+  document.getElementById("boost-history").innerHTML=boostHistory.map(item=>`
+    <div class="table-row">
+      <span style="color:var(--text2);font-size:0.78rem">🏪 ${item.vendor}</span>
+      <span style="font-size:0.72rem;color:var(--text3)">${item.plan}</span>
+      <span class="amount">+${fmt(item.amount)} F</span>
+      <span style="color:var(--text3);font-size:0.7rem">${item.date}</span>
+    </div>`).join("");
+}
+
+function saveWave(){
+  const n=document.getElementById("w-name").value.trim();
+  const p=document.getElementById("w-phone").value.trim();
+  if(!n||!p){showToast("Remplis les deux champs","error");return;}
+  waveName=n; wavePhone=p; waveReady=true;
+  showToast("✅ Wave configuré ! Les paiements arrivent sur ton compte.");
+  renderAdmin();
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────────
+renderAvatarPicker();
+renderHome();
+</script>
+</body>
 </html>

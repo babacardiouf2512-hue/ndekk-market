@@ -101,21 +101,16 @@
     .avatar-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px;}
     .av-opt{width:38px;height:38px;border-radius:9px;background:var(--surface2);border:2px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.3rem;}
     .av-opt.sel{border-color:var(--gold);background:var(--gold-dim);}
-
-    /* MEDIA UPLOAD */
     .media-tabs{display:flex;gap:8px;margin-bottom:12px;}
-    .media-tab{flex:1;padding:10px;border-radius:9px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:0.82rem;font-weight:600;text-align:center;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+    .media-tab{flex:1;padding:10px;border-radius:9px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:0.82rem;font-weight:600;text-align:center;font-family:'DM Sans',sans-serif;}
     .media-tab.active{border-color:var(--gold);background:var(--gold-dim);color:var(--gold);}
     .media-upload{width:100%;height:140px;background:var(--surface2);border:2px dashed var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;margin-bottom:12px;}
-    .media-upload:hover{border-color:var(--gold);}
     .media-upload img,.media-upload video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
     .media-upload-text{font-size:0.82rem;color:var(--text3);text-align:center;position:relative;z-index:1;line-height:1.6;}
     .media-upload-icon{font-size:2rem;margin-bottom:6px;}
     .media-clear{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.7);color:white;font-size:0.65rem;padding:3px 8px;border-radius:4px;cursor:pointer;z-index:2;border:none;font-family:'DM Sans',sans-serif;}
     .upload-progress{height:4px;background:var(--surface3);border-radius:2px;margin-bottom:8px;overflow:hidden;display:none;}
     .upload-progress-bar{height:100%;background:var(--gold);border-radius:2px;width:0%;transition:width 0.3s;}
-
-    /* ADMIN */
     .admin-lock{min-height:calc(100vh - 100px);display:flex;align-items:center;justify-content:center;padding:24px 16px;}
     .lock-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px 22px;width:100%;max-width:360px;text-align:center;}
     .logo-clicks{position:absolute;top:4px;right:0;display:flex;gap:3px;}
@@ -170,7 +165,7 @@
     </div>
   </div>
   <div class="stats-bar">
-    <div class="stat"><strong>1 240</strong><span>Vendeurs</span></div>
+    <div class="stat"><strong id="stat-vendors">1 240</strong><span>Vendeurs</span></div>
     <div class="stat"><strong>14</strong><span>Villes</span></div>
     <div class="stat"><strong>98%</strong><span>Satisfaction</span></div>
     <div class="stat"><strong>Wave</strong><span>Paiement</span></div>
@@ -243,38 +238,30 @@
     <div id="boost-list"></div>
     <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;margin-top:8px;margin-bottom:12px">📦 Publier un produit</div>
     <div style="background:var(--surface);border:1px solid var(--border2);border-radius:13px;padding:16px">
-
-      <!-- MEDIA UPLOAD SECTION -->
       <div class="form-group">
-        <label class="form-label">📸 Photo ou 🎥 Vidéo du produit</label>
+        <label class="form-label">📸 Photo ou 🎥 Vidéo</label>
         <div class="media-tabs">
           <div class="media-tab active" id="tab-photo" onclick="switchMediaTab('photo')">📸 Photo</div>
           <div class="media-tab" id="tab-video" onclick="switchMediaTab('video')">🎥 Vidéo</div>
         </div>
-
-        <!-- Photo upload -->
         <div id="photo-section">
           <div class="media-upload" id="photo-preview" onclick="document.getElementById('photo-input').click()">
             <div class="media-upload-text"><div class="media-upload-icon">📸</div>Clique pour ajouter une photo<br><span style="font-size:0.7rem;opacity:0.6">JPG, PNG — max 5MB</span></div>
             <input type="file" id="photo-input" accept="image/*" onchange="handlePhotoUpload(event)" style="display:none">
           </div>
         </div>
-
-        <!-- Video upload -->
         <div id="video-section" style="display:none">
           <div class="media-upload" id="video-preview" onclick="document.getElementById('video-input').click()">
             <div class="media-upload-text"><div class="media-upload-icon">🎥</div>Clique pour ajouter une vidéo<br><span style="font-size:0.7rem;opacity:0.6">MP4, MOV — max 50MB</span></div>
             <input type="file" id="video-input" accept="video/*" onchange="handleVideoUpload(event)" style="display:none">
           </div>
           <div class="upload-progress" id="video-progress"><div class="upload-progress-bar" id="video-progress-bar"></div></div>
-          <p style="font-size:0.72rem;color:var(--text3);margin-top:-8px;margin-bottom:12px">💡 La vidéo sera visible sur la fiche produit. Max 50MB.</p>
         </div>
       </div>
-
       <div class="form-group"><label class="form-label">Nom du produit *</label><input class="form-input" id="p-name" placeholder="Ex: Boubou brodé..."></div>
       <div class="form-row2">
         <div class="form-group"><label class="form-label">Prix (FCFA) *</label><input class="form-input" type="number" id="p-price" placeholder="5000"></div>
-        <div class="form-group"><label class="form-label">Emoji (optionnel)</label><input class="form-input" id="p-emoji" placeholder="📦"></div>
+        <div class="form-group"><label class="form-label">Emoji</label><input class="form-input" id="p-emoji" placeholder="📦"></div>
       </div>
       <div class="form-row2">
         <div class="form-group"><label class="form-label">Catégorie</label>
@@ -346,13 +333,36 @@
 <div class="toast-wrap"><div class="toast" id="toast"></div></div>
 
 <script>
-const ADMIN_PWD="babacardiouf444";
-let vendors=[
+const ADMIN_PWD = "babacardiouf444";
+
+// ── VENDEURS PAR DÉFAUT ────────────────────────────────────────────────────────
+const DEFAULT_VENDORS = [
   {id:1,name:"Fatou Couture",phone:"77 123 45 67",city:"Dakar",avatar:"👩🏾",bio:"Créatrice de mode depuis 2015. Spécialiste boubous et tenues traditionnelles.",verified:true,premium:true,sales:234,rating:4.9,joined:"Jan 2023"},
   {id:2,name:"Tech Mbaye",phone:"76 987 65 43",city:"Dakar",avatar:"👨🏾‍💻",bio:"Revendeur officiel Samsung & Tecno. Garantie 6 mois sur tous les appareils.",verified:true,premium:true,sales:87,rating:4.7,joined:"Mar 2023"},
   {id:3,name:"Maman Rokhaya",phone:"78 456 78 90",city:"Saint-Louis",avatar:"👩🏾‍🍳",bio:"Cuisine traditionnelle sénégalaise. Livraison possible dans Saint-Louis.",verified:false,premium:false,sales:412,rating:5.0,joined:"Juil 2023"},
   {id:4,name:"Artisan Gaye",phone:"70 321 09 87",city:"Mbour",avatar:"👨🏾‍🎨",bio:"Artisan vannier depuis 20 ans. Pièces uniques faites à la main.",verified:true,premium:false,sales:156,rating:4.8,joined:"Avr 2023"},
 ];
+
+// ── CHARGEMENT DEPUIS LOCALSTORAGE ────────────────────────────────────────────
+// On fusionne les vendeurs par défaut avec ceux inscrits
+function loadVendors(){
+  const saved = JSON.parse(localStorage.getItem("ndekk_vendors") || "[]");
+  // Garder les défauts + ajouter les nouveaux inscrits
+  const merged = [...DEFAULT_VENDORS];
+  saved.forEach(sv => {
+    if(!merged.find(v => v.phone === sv.phone)) merged.push(sv);
+  });
+  return merged;
+}
+
+function saveVendors(){
+  // On sauvegarde uniquement les nouveaux vendeurs (pas les défauts)
+  const newVendors = vendors.filter(v => v.id > DEFAULT_VENDORS.length);
+  localStorage.setItem("ndekk_vendors", JSON.stringify(newVendors));
+}
+
+let vendors = loadVendors();
+
 let products=[
   {id:1,name:"Boubou brodé Premium",price:45000,vendorId:1,category:"Mode",emoji:"👘",photo:null,video:null,rating:4.9,reviews:28,boosted:true,boostType:"vedette",stock:5},
   {id:2,name:"Thiébou dieune royal",price:5500,vendorId:3,category:"Alimentation",emoji:"🍚",photo:null,video:null,rating:5.0,reviews:94,boosted:false,stock:20},
@@ -386,22 +396,24 @@ let waveReady=!!(wavePhone&&waveName);
 let revenue=parseInt(localStorage.getItem("ndekk_revenue")||"47000");
 let boostHistory=JSON.parse(localStorage.getItem("ndekk_history")||'[{"vendor":"Fatou Couture","plan":"⭐ Vedette","amount":3000,"date":"08 Avr"},{"vendor":"Tech Mbaye","plan":"💎 Premium","amount":12000,"date":"05 Avr"}]');
 
-function saveData(){localStorage.setItem("ndekk_wave_phone",wavePhone);localStorage.setItem("ndekk_wave_name",waveName);localStorage.setItem("ndekk_revenue",revenue);localStorage.setItem("ndekk_history",JSON.stringify(boostHistory));}
+function saveData(){
+  localStorage.setItem("ndekk_wave_phone",wavePhone);
+  localStorage.setItem("ndekk_wave_name",waveName);
+  localStorage.setItem("ndekk_revenue",revenue);
+  localStorage.setItem("ndekk_history",JSON.stringify(boostHistory));
+  saveVendors();
+}
 
-// ── LOGO SECRET ─────────────────────────────────────────────────────────────
+// ── LOGO SECRET ────────────────────────────────────────────────────────────────
 function handleLogoClick(){
   logoClickCount++;
   for(let i=1;i<=5;i++){const d=document.getElementById("dot"+i);if(i<=logoClickCount)d.classList.add("lit");else d.classList.remove("lit");}
   clearTimeout(logoClickTimer);
-  if(logoClickCount>=5){
-    logoClickCount=0;for(let i=1;i<=5;i++)document.getElementById("dot"+i).classList.remove("lit");
-    goTo("admin");
-  } else {
-    logoClickTimer=setTimeout(()=>{logoClickCount=0;for(let i=1;i<=5;i++)document.getElementById("dot"+i).classList.remove("lit");},2000);
-  }
+  if(logoClickCount>=5){logoClickCount=0;for(let i=1;i<=5;i++)document.getElementById("dot"+i).classList.remove("lit");goTo("admin");}
+  else{logoClickTimer=setTimeout(()=>{logoClickCount=0;for(let i=1;i<=5;i++)document.getElementById("dot"+i).classList.remove("lit");},2000);}
 }
 
-// ── MEDIA TABS ───────────────────────────────────────────────────────────────
+// ── MEDIA ──────────────────────────────────────────────────────────────────────
 function switchMediaTab(tab){
   currentMediaTab=tab;
   document.getElementById("tab-photo").classList.toggle("active",tab==="photo");
@@ -411,49 +423,28 @@ function switchMediaTab(tab){
 }
 
 function handlePhotoUpload(event){
-  const file=event.target.files[0];
-  if(!file)return;
+  const file=event.target.files[0];if(!file)return;
   if(file.size>5*1024*1024){showToast("Photo trop lourde (max 5MB)","error");return;}
   const reader=new FileReader();
-  reader.onload=function(e){
-    currentPhoto=e.target.result;
-    document.getElementById("photo-preview").innerHTML=`<img src="${currentPhoto}" alt="Aperçu"><button class="media-clear" onclick="clearPhoto()">✕ Changer</button>`;
-  };
-  reader.readAsDataURL(file);
-  showToast("📸 Photo chargée !");
+  reader.onload=function(e){currentPhoto=e.target.result;document.getElementById("photo-preview").innerHTML=`<img src="${currentPhoto}" alt="Aperçu"><button class="media-clear" onclick="clearPhoto()">✕ Changer</button>`;};
+  reader.readAsDataURL(file);showToast("📸 Photo chargée !");
 }
 
 function handleVideoUpload(event){
-  const file=event.target.files[0];
-  if(!file)return;
+  const file=event.target.files[0];if(!file)return;
   if(file.size>50*1024*1024){showToast("Vidéo trop lourde (max 50MB)","error");return;}
-  showToast("🎥 Chargement de la vidéo...");
-  const progress=document.getElementById("video-progress");
-  const bar=document.getElementById("video-progress-bar");
-  progress.style.display="block";
-  let pct=0;
-  const interval=setInterval(()=>{pct+=10;bar.style.width=pct+"%";if(pct>=100)clearInterval(interval);},100);
+  const progress=document.getElementById("video-progress"),bar=document.getElementById("video-progress-bar");
+  progress.style.display="block";let pct=0;
+  const iv=setInterval(()=>{pct+=10;bar.style.width=pct+"%";if(pct>=100)clearInterval(iv);},100);
   const reader=new FileReader();
-  reader.onload=function(e){
-    currentVideo=e.target.result;
-    document.getElementById("video-preview").innerHTML=`<video src="${currentVideo}" controls style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></video><button class="media-clear" onclick="clearVideo()">✕ Changer</button>`;
-    setTimeout(()=>{progress.style.display="none";bar.style.width="0%";},1100);
-    showToast("🎥 Vidéo chargée avec succès !");
-  };
+  reader.onload=function(e){currentVideo=e.target.result;document.getElementById("video-preview").innerHTML=`<video src="${currentVideo}" controls style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></video><button class="media-clear" onclick="clearVideo()">✕ Changer</button>`;setTimeout(()=>{progress.style.display="none";bar.style.width="0%";},1100);showToast("🎥 Vidéo chargée !");};
   reader.readAsDataURL(file);
 }
 
-function clearPhoto(){
-  currentPhoto=null;
-  document.getElementById("photo-preview").innerHTML=`<div class="media-upload-text"><div class="media-upload-icon">📸</div>Clique pour ajouter une photo<br><span style="font-size:0.7rem;opacity:0.6">JPG, PNG — max 5MB</span></div><input type="file" id="photo-input" accept="image/*" onchange="handlePhotoUpload(event)" style="display:none">`;
-}
+function clearPhoto(){currentPhoto=null;document.getElementById("photo-preview").innerHTML=`<div class="media-upload-text"><div class="media-upload-icon">📸</div>Clique pour ajouter une photo<br><span style="font-size:0.7rem;opacity:0.6">JPG, PNG — max 5MB</span></div><input type="file" id="photo-input" accept="image/*" onchange="handlePhotoUpload(event)" style="display:none">`;}
+function clearVideo(){currentVideo=null;document.getElementById("video-preview").innerHTML=`<div class="media-upload-text"><div class="media-upload-icon">🎥</div>Clique pour ajouter une vidéo<br><span style="font-size:0.7rem;opacity:0.6">MP4, MOV — max 50MB</span></div><input type="file" id="video-input" accept="video/*" onchange="handleVideoUpload(event)" style="display:none">`;}
 
-function clearVideo(){
-  currentVideo=null;
-  document.getElementById("video-preview").innerHTML=`<div class="media-upload-text"><div class="media-upload-icon">🎥</div>Clique pour ajouter une vidéo<br><span style="font-size:0.7rem;opacity:0.6">MP4, MOV — max 50MB</span></div><input type="file" id="video-input" accept="video/*" onchange="handleVideoUpload(event)" style="display:none">`;
-}
-
-// ── HELPERS ───────────────────────────────────────────────────────────────────
+// ── HELPERS ────────────────────────────────────────────────────────────────────
 function stars(r){return "★".repeat(Math.floor(r))+"☆".repeat(5-Math.floor(r));}
 function fmt(n){return Number(n).toLocaleString("fr-FR");}
 function vendorOf(id){return vendors.find(v=>v.id===id)||{};}
@@ -475,19 +466,14 @@ function goTo(page){
   if(page==="vendeur-space")renderVendeurSpace();
 }
 
-// ── PRODUCT CARD ──────────────────────────────────────────────────────────────
+// ── CARDS ──────────────────────────────────────────────────────────────────────
 function productCard(p,onclick){
   const v=vendorOf(p.vendorId);
   const badge=p.boosted?`<span class="pcard-badge ${p.boostType==="premium"?"badge-purple":"badge-gold"}">${p.boostType==="premium"?"💎":"⭐"}</span>`:"";
   let thumb,vidBadge="";
-  if(p.video){
-    thumb=`<video src="${p.video}" muted playsinline style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></video>`;
-    vidBadge=`<span class="video-badge">▶ Vidéo</span>`;
-  } else if(p.photo){
-    thumb=`<img src="${p.photo}" alt="${p.name}">`;
-  } else {
-    thumb=`<span>${p.emoji||"📦"}</span>`;
-  }
+  if(p.video){thumb=`<video src="${p.video}" muted playsinline style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></video>`;vidBadge=`<span class="video-badge">▶ Vidéo</span>`;}
+  else if(p.photo){thumb=`<img src="${p.photo}" alt="${p.name}">`;}
+  else{thumb=`<span>${p.emoji||"📦"}</span>`;}
   return `<div class="pcard ${p.boosted?"boosted":""}" onclick="${onclick}">
     <div class="pcard-thumb">${thumb}${badge}${vidBadge}</div>
     <div class="pcard-body">
@@ -509,7 +495,7 @@ function vendorCard(v,onclick){
       <div style="flex:1;min-width:0">
         <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;margin-bottom:2px">${v.name}</div>
         <div style="font-size:0.72rem;color:var(--text3);margin-bottom:5px">📍 ${v.city}</div>
-        <div>${v.verified?'<span class="badge">✓ Vérifié</span>':""} ${v.premium?'<span class="badge badge-v">💎 Premium</span>':""}</div>
+        <div>${v.verified?'<span class="badge">✓ Vérifié</span>':""} ${v.premium?'<span class="badge badge-v">💎</span>':""}</div>
         <div style="font-size:0.78rem;color:var(--text2);line-height:1.5;margin-top:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${v.bio}</div>
         <div style="display:flex;gap:16px;margin-top:8px">
           <div style="font-size:0.72rem;color:var(--text3)"><strong style="color:var(--text2);display:block">${v.sales}</strong>ventes</div>
@@ -522,6 +508,7 @@ function vendorCard(v,onclick){
 }
 
 function renderHome(){
+  document.getElementById("stat-vendors").textContent=vendors.length.toLocaleString("fr-FR");
   document.getElementById("home-products").innerHTML=[...products].sort((a,b)=>(b.boosted?1:0)-(a.boosted?1:0)).filter(p=>p.boosted).map(p=>productCard(p,`openProduct(${p.id})`)).join("");
   document.getElementById("home-vendors").innerHTML=vendors.filter(v=>v.verified).map(v=>vendorCard(v,`openVendor(${v.id})`)).join("");
 }
@@ -568,14 +555,9 @@ function openProduct(id){
   const v=vendorOf(p.vendorId);
   const rev=reviews.filter(r=>r.productId===id);
   let mediaSection="";
-  if(p.video){
-    mediaSection=`<video src="${p.video}" controls style="width:100%;height:220px;object-fit:cover;border-radius:14px;background:#000;margin-bottom:18px"></video>`;
-    if(p.photo) mediaSection+=`<img src="${p.photo}" style="width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:18px">`;
-  } else if(p.photo){
-    mediaSection=`<img src="${p.photo}" style="width:100%;height:220px;object-fit:cover;border-radius:14px;margin-bottom:18px">`;
-  } else {
-    mediaSection=`<div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;height:220px;display:flex;align-items:center;justify-content:center;font-size:6rem;margin-bottom:18px">${p.emoji||"📦"}</div>`;
-  }
+  if(p.video){mediaSection=`<video src="${p.video}" controls style="width:100%;height:220px;object-fit:cover;border-radius:14px;background:#000;margin-bottom:18px"></video>`;if(p.photo)mediaSection+=`<img src="${p.photo}" style="width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:18px">`;}
+  else if(p.photo){mediaSection=`<img src="${p.photo}" style="width:100%;height:220px;object-fit:cover;border-radius:14px;margin-bottom:18px">`;}
+  else{mediaSection=`<div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;height:220px;display:flex;align-items:center;justify-content:center;font-size:6rem;margin-bottom:18px">${p.emoji||"📦"}</div>`;}
   document.getElementById("product-detail").innerHTML=`
     <button onclick="goTo('market')" style="background:none;border:none;color:var(--text3);font-size:0.78rem;cursor:pointer;margin-bottom:16px;font-family:'DM Sans',sans-serif">← Retour</button>
     ${mediaSection}
@@ -607,6 +589,7 @@ function openProduct(id){
   goTo("product");
 }
 
+// ── AUTH ───────────────────────────────────────────────────────────────────────
 function switchAuth(mode){
   authMode=mode;
   document.getElementById("register-fields").style.display=mode==="register"?"block":"none";
@@ -629,12 +612,18 @@ function handleAuth(){
     const name=document.getElementById("auth-name").value.trim();
     const city=document.getElementById("auth-city").value;
     if(!name||!phone){showToast("Remplis tous les champs","error");return;}
-    const nv={id:vendors.length+1,name,phone,city,avatar:selectedAvatar,bio:"Nouveau vendeur sur Ndëkk Market.",verified:false,premium:false,sales:0,rating:5.0,joined:"Avr 2026"};
-    vendors.push(nv);currentUser=nv;showToast("🎉 Bienvenue "+name+" !");
+    // Vérifier si le numéro existe déjà
+    if(vendors.find(v=>v.phone===phone)){showToast("Ce numéro est déjà enregistré. Connecte-toi !","error");switchAuth("login");return;}
+    const nv={id:Date.now(),name,phone,city,avatar:selectedAvatar,bio:"Nouveau vendeur sur Ndëkk Market 🇸🇳",verified:false,premium:false,sales:0,rating:5.0,joined:"Avr 2026"};
+    vendors.push(nv);
+    saveVendors(); // ✅ SAUVEGARDE IMMÉDIATE
+    currentUser=nv;
+    showToast("🎉 Compte créé ! Bienvenue "+name+" !");
   } else {
     const found=vendors.find(v=>v.phone===phone);
-    if(!found){showToast("Numéro introuvable","error");return;}
-    currentUser=found;showToast("👋 Content de te revoir, "+found.name+" !");
+    if(!found){showToast("Numéro introuvable. Inscris-toi d'abord !","error");return;}
+    currentUser=found;
+    showToast("👋 Content de te revoir, "+found.name+" !");
   }
   document.getElementById("btn-vendre").style.display="none";
   document.getElementById("user-display").style.display="block";
@@ -643,6 +632,7 @@ function handleAuth(){
   goTo("vendeur-space");
 }
 
+// ── CART ───────────────────────────────────────────────────────────────────────
 function addCart(id){const p=products.find(x=>x.id===id);cart.push(p);updateCartBadge();showToast((p.emoji||"📦")+" "+p.name+" ajouté !");}
 
 function openCart(){
@@ -654,7 +644,7 @@ function openCart(){
   } else {
     document.getElementById("cart-items").innerHTML=cart.map((item,i)=>`
       <div class="cart-item">
-        <span style="font-size:1.5rem">${item.photo?`<img src="${item.photo}" style="width:36px;height:36px;object-fit:cover;border-radius:6px">`:item.emoji||"📦"}</span>
+        <span>${item.photo?`<img src="${item.photo}" style="width:36px;height:36px;object-fit:cover;border-radius:6px">`:item.emoji||"📦"}</span>
         <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:0.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.name}</div><div style="color:var(--gold);font-weight:600;font-size:0.88rem">${fmt(item.price)} FCFA</div></div>
         <button onclick="removeCart(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:1rem">✕</button>
       </div>`).join("");
@@ -675,6 +665,7 @@ function payCart(){
   cart=[];updateCartBadge();closeModal("modal-cart");showToast("✅ Redirection Wave !");
 }
 
+// ── BOOSTS ─────────────────────────────────────────────────────────────────────
 function openBoostModal(id){
   currentBoost=boosts.find(b=>b.id===id);
   document.getElementById("boost-modal-content").innerHTML=`
@@ -695,11 +686,15 @@ function confirmBoost(){
   if(adminUnlocked)renderAdmin();
 }
 
+// ── VENDEUR SPACE ──────────────────────────────────────────────────────────────
 function renderVendeurSpace(){
   if(!currentUser){goTo("auth");return;}
   document.getElementById("vendeur-welcome").innerHTML=`
     <div style="width:46px;height:46px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.6rem">${currentUser.avatar}</div>
-    <div><div style="font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700">Bonjour, ${currentUser.name} 👋</div><div style="font-size:0.72rem;color:var(--text3)">📍 ${currentUser.city}</div></div>`;
+    <div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700">Bonjour, ${currentUser.name} 👋</div>
+      <div style="font-size:0.72rem;color:var(--text3)">📍 ${currentUser.city} · ${currentUser.phone}</div>
+    </div>`;
   document.getElementById("boost-list").innerHTML=boosts.map(b=>`
     <div class="boost-card" style="border-color:${b.color}33;background:${b.color}08" onclick="openBoostModal('${b.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
@@ -717,40 +712,23 @@ function postProduct(){
   if(!name||!price){showToast("Nom et prix requis","error");return;}
   const photo=currentMediaTab==="photo"?currentPhoto:null;
   const video=currentMediaTab==="video"?currentVideo:null;
-  products.unshift({
-    id:products.length+1,name,price:parseInt(price),
-    vendorId:currentUser?.id||1,
-    category:document.getElementById("p-cat").value,
-    emoji:document.getElementById("p-emoji").value||"📦",
-    photo,video,rating:5.0,reviews:0,boosted:false,
-    stock:parseInt(document.getElementById("p-stock").value)||10
-  });
+  products.unshift({id:products.length+1,name,price:parseInt(price),vendorId:currentUser?.id||1,category:document.getElementById("p-cat").value,emoji:document.getElementById("p-emoji").value||"📦",photo,video,rating:5.0,reviews:0,boosted:false,stock:parseInt(document.getElementById("p-stock").value)||10});
   document.getElementById("p-name").value="";document.getElementById("p-price").value="";
   document.getElementById("p-emoji").value="";document.getElementById("p-stock").value="";
-  currentPhoto=null;currentVideo=null;
-  clearPhoto();clearVideo();
-  showToast("🚀 Produit publié "+(photo?"avec photo !":(video?"avec vidéo !":"!")));
+  currentPhoto=null;currentVideo=null;clearPhoto();clearVideo();
+  showToast("🚀 Produit publié !");
 }
 
+// ── ADMIN ──────────────────────────────────────────────────────────────────────
 function renderAdminPage(){
-  if(adminUnlocked){
-    document.getElementById("admin-lock-screen").style.display="none";
-    document.getElementById("admin-dashboard").style.display="block";
-    renderAdmin();
-  } else {
-    document.getElementById("admin-lock-screen").style.display="block";
-    document.getElementById("admin-dashboard").style.display="none";
-  }
+  if(adminUnlocked){document.getElementById("admin-lock-screen").style.display="none";document.getElementById("admin-dashboard").style.display="block";renderAdmin();}
+  else{document.getElementById("admin-lock-screen").style.display="block";document.getElementById("admin-dashboard").style.display="none";}
 }
 
 function checkAdminPwd(){
   const pwd=document.getElementById("admin-pwd").value;
-  if(pwd===ADMIN_PWD){
-    adminUnlocked=true;
-    document.getElementById("admin-lock-screen").style.display="none";
-    document.getElementById("admin-dashboard").style.display="block";
-    renderAdmin();showToast("✅ Bienvenue dans ton Admin !");
-  } else {showToast("❌ Mot de passe incorrect","error");document.getElementById("admin-pwd").value="";}
+  if(pwd===ADMIN_PWD){adminUnlocked=true;document.getElementById("admin-lock-screen").style.display="none";document.getElementById("admin-dashboard").style.display="block";renderAdmin();showToast("✅ Bienvenue dans ton Admin !");}
+  else{showToast("❌ Mot de passe incorrect","error");document.getElementById("admin-pwd").value="";}
 }
 
 function lockAdmin(){adminUnlocked=false;renderAdminPage();showToast("🔒 Admin verrouillé");}
@@ -776,7 +754,7 @@ function renderAdmin(){
     <div class="kpi"><strong>${fmt(revenue)} F</strong><span>Revenus boosts</span></div>
     <div class="kpi"><strong>${products.filter(p=>p.boosted).length}</strong><span>Boostés</span></div>
     <div class="kpi"><strong>${products.length}</strong><span>Produits</span></div>
-    <div class="kpi"><strong>${vendors.length}</strong><span>Vendeurs</span></div>`;
+    <div class="kpi"><strong>${vendors.length}</strong><span>Vendeurs inscrits</span></div>`;
   document.getElementById("boost-history").innerHTML=boostHistory.map(item=>`
     <div class="table-row">
       <span style="color:var(--text2);font-size:0.78rem">🏪 ${item.vendor}</span>
@@ -794,6 +772,7 @@ function saveWave(){
   showToast("✅ Wave sauvegardé définitivement !");renderAdmin();
 }
 
+// ── INIT ───────────────────────────────────────────────────────────────────────
 renderAvatarPicker();
 renderHome();
 </script>

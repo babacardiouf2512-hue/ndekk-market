@@ -122,6 +122,7 @@
     .toast.success{background:rgba(80,200,120,0.1);color:var(--success);border-color:rgba(80,200,120,0.2);}
     .toast.error{background:rgba(224,80,80,0.1);color:var(--danger);border-color:rgba(224,80,80,0.2);}
     .projection{background:linear-gradient(135deg,#150e00,#241800);border:1px solid var(--gold);border-radius:13px;padding:18px;margin-top:18px;text-align:center;}
+    .new-badge{position:absolute;top:7px;right:7px;background:var(--success);color:white;font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:4px;}
   </style>
 </head>
 <body>
@@ -150,7 +151,6 @@
   </div>
 </nav>
 
-<!-- HOME -->
 <div class="page active" id="page-home">
   <div class="hero">
     <div class="hero-pattern"></div>
@@ -166,7 +166,7 @@
   </div>
   <div class="stats-bar">
     <div class="stat"><strong id="stat-vendors">1 240</strong><span>Vendeurs</span></div>
-    <div class="stat"><strong>14</strong><span>Villes</span></div>
+    <div class="stat"><strong id="stat-products">8</strong><span>Produits</span></div>
     <div class="stat"><strong>98%</strong><span>Satisfaction</span></div>
     <div class="stat"><strong>Wave</strong><span>Paiement</span></div>
   </div>
@@ -178,7 +178,6 @@
   </div>
 </div>
 
-<!-- MARKET -->
 <div class="page" id="page-market">
   <div class="page-wrap">
     <div class="section-header"><div class="section-title">Tous les produits</div><span style="font-size:0.72rem;color:var(--text3)" id="result-count"></span></div>
@@ -188,21 +187,17 @@
   </div>
 </div>
 
-<!-- VENDORS -->
 <div class="page" id="page-vendors">
   <div class="page-wrap"><div class="section-title" style="margin-bottom:16px">Tous les vendeurs</div><div id="all-vendors"></div></div>
 </div>
 
-<!-- VENDOR PROFILE -->
 <div class="page" id="page-vendor-profile">
   <div style="background:var(--surface);border-bottom:1px solid var(--border2);padding:22px 16px" id="vendor-profile-hero"></div>
   <div class="page-wrap"><div class="section-title" style="margin-bottom:16px" id="vendor-profile-title"></div><div class="prod-grid" id="vendor-profile-products"></div></div>
 </div>
 
-<!-- PRODUCT -->
 <div class="page" id="page-product"><div class="page-wrap" id="product-detail"></div></div>
 
-<!-- AUTH -->
 <div class="page" id="page-auth">
   <div class="auth-wrap">
     <div class="auth-card">
@@ -229,7 +224,6 @@
   </div>
 </div>
 
-<!-- VENDEUR SPACE -->
 <div class="page" id="page-vendeur-space">
   <div class="page-wrap">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;background:var(--surface);border-radius:13px;padding:14px;border:1px solid var(--border)" id="vendeur-welcome"></div>
@@ -271,10 +265,13 @@
       </div>
       <button class="btn-gold" style="width:100%;padding:11px;margin-top:4px" onclick="postProduct()">🚀 Publier maintenant</button>
     </div>
+
+    <!-- Mes produits publiés -->
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;margin-top:24px;margin-bottom:12px">📋 Mes produits publiés</div>
+    <div class="prod-grid" id="my-products"></div>
   </div>
 </div>
 
-<!-- ADMIN -->
 <div class="page" id="page-admin">
   <div id="admin-lock-screen">
     <div class="admin-lock">
@@ -307,7 +304,6 @@
   </div>
 </div>
 
-<!-- MODALS -->
 <div class="overlay" id="modal-boost">
   <div class="modal">
     <div class="modal-title">🌊 Payer via Wave</div>
@@ -335,7 +331,18 @@
 <script>
 const ADMIN_PWD = "babacardiouf444";
 
-// ── VENDEURS PAR DÉFAUT ────────────────────────────────────────────────────────
+// ── PRODUITS PAR DÉFAUT ────────────────────────────────────────────────────────
+const DEFAULT_PRODUCTS = [
+  {id:1,name:"Boubou brodé Premium",price:45000,vendorId:1,category:"Mode",emoji:"👘",photo:null,video:null,rating:4.9,reviews:28,boosted:true,boostType:"vedette",stock:5,isDefault:true},
+  {id:2,name:"Thiébou dieune royal",price:5500,vendorId:3,category:"Alimentation",emoji:"🍚",photo:null,video:null,rating:5.0,reviews:94,boosted:false,stock:20,isDefault:true},
+  {id:3,name:"Samsung Galaxy A55",price:185000,vendorId:2,category:"Électronique",emoji:"📱",photo:null,video:null,rating:4.8,reviews:12,boosted:true,boostType:"premium",stock:3,isDefault:true},
+  {id:4,name:"Tissu wax Holland 6y",price:12000,vendorId:1,category:"Mode",emoji:"🎨",photo:null,video:null,rating:4.9,reviews:67,boosted:false,stock:15,isDefault:true},
+  {id:5,name:"Mangues Casamance 5kg",price:3500,vendorId:3,category:"Alimentation",emoji:"🥭",photo:null,video:null,rating:4.7,reviews:140,boosted:false,stock:30,isDefault:true},
+  {id:6,name:"Panier osier XL",price:8500,vendorId:4,category:"Maison",emoji:"🧺",photo:null,video:null,rating:4.8,reviews:45,boosted:true,boostType:"vedette",stock:8,isDefault:true},
+  {id:7,name:"Thiouraye luxe",price:3200,vendorId:4,category:"Maison",emoji:"🌿",photo:null,video:null,rating:4.9,reviews:203,boosted:false,stock:50,isDefault:true},
+  {id:8,name:"Chaussures cuir Dakar",price:28000,vendorId:1,category:"Mode",emoji:"👞",photo:null,video:null,rating:4.6,reviews:33,boosted:false,stock:7,isDefault:true},
+];
+
 const DEFAULT_VENDORS = [
   {id:1,name:"Fatou Couture",phone:"77 123 45 67",city:"Dakar",avatar:"👩🏾",bio:"Créatrice de mode depuis 2015. Spécialiste boubous et tenues traditionnelles.",verified:true,premium:true,sales:234,rating:4.9,joined:"Jan 2023"},
   {id:2,name:"Tech Mbaye",phone:"76 987 65 43",city:"Dakar",avatar:"👨🏾‍💻",bio:"Revendeur officiel Samsung & Tecno. Garantie 6 mois sur tous les appareils.",verified:true,premium:true,sales:87,rating:4.7,joined:"Mar 2023"},
@@ -344,35 +351,33 @@ const DEFAULT_VENDORS = [
 ];
 
 // ── CHARGEMENT DEPUIS LOCALSTORAGE ────────────────────────────────────────────
-// On fusionne les vendeurs par défaut avec ceux inscrits
 function loadVendors(){
   const saved = JSON.parse(localStorage.getItem("ndekk_vendors") || "[]");
-  // Garder les défauts + ajouter les nouveaux inscrits
   const merged = [...DEFAULT_VENDORS];
-  saved.forEach(sv => {
-    if(!merged.find(v => v.phone === sv.phone)) merged.push(sv);
-  });
+  saved.forEach(sv => { if(!merged.find(v => v.phone === sv.phone)) merged.push(sv); });
   return merged;
 }
 
+function loadProducts(){
+  const saved = JSON.parse(localStorage.getItem("ndekk_products") || "[]");
+  // Produits par défaut + produits publiés par les vendeurs
+  return [...DEFAULT_PRODUCTS, ...saved];
+}
+
 function saveVendors(){
-  // On sauvegarde uniquement les nouveaux vendeurs (pas les défauts)
-  const newVendors = vendors.filter(v => v.id > DEFAULT_VENDORS.length);
+  const newVendors = vendors.filter(v => !DEFAULT_VENDORS.find(d => d.phone === v.phone));
   localStorage.setItem("ndekk_vendors", JSON.stringify(newVendors));
 }
 
-let vendors = loadVendors();
+function saveProducts(){
+  // On sauvegarde uniquement les nouveaux produits (pas les défauts)
+  const newProducts = products.filter(p => !p.isDefault);
+  localStorage.setItem("ndekk_products", JSON.stringify(newProducts));
+}
 
-let products=[
-  {id:1,name:"Boubou brodé Premium",price:45000,vendorId:1,category:"Mode",emoji:"👘",photo:null,video:null,rating:4.9,reviews:28,boosted:true,boostType:"vedette",stock:5},
-  {id:2,name:"Thiébou dieune royal",price:5500,vendorId:3,category:"Alimentation",emoji:"🍚",photo:null,video:null,rating:5.0,reviews:94,boosted:false,stock:20},
-  {id:3,name:"Samsung Galaxy A55",price:185000,vendorId:2,category:"Électronique",emoji:"📱",photo:null,video:null,rating:4.8,reviews:12,boosted:true,boostType:"premium",stock:3},
-  {id:4,name:"Tissu wax Holland 6y",price:12000,vendorId:1,category:"Mode",emoji:"🎨",photo:null,video:null,rating:4.9,reviews:67,boosted:false,stock:15},
-  {id:5,name:"Mangues Casamance 5kg",price:3500,vendorId:3,category:"Alimentation",emoji:"🥭",photo:null,video:null,rating:4.7,reviews:140,boosted:false,stock:30},
-  {id:6,name:"Panier osier XL",price:8500,vendorId:4,category:"Maison",emoji:"🧺",photo:null,video:null,rating:4.8,reviews:45,boosted:true,boostType:"vedette",stock:8},
-  {id:7,name:"Thiouraye luxe",price:3200,vendorId:4,category:"Maison",emoji:"🌿",photo:null,video:null,rating:4.9,reviews:203,boosted:false,stock:50},
-  {id:8,name:"Chaussures cuir Dakar",price:28000,vendorId:1,category:"Mode",emoji:"👞",photo:null,video:null,rating:4.6,reviews:33,boosted:false,stock:7},
-];
+let vendors = loadVendors();
+let products = loadProducts();
+
 const reviews=[
   {id:1,productId:1,author:"Aminata S.",avatar:"👩🏾",rating:5,text:"Qualité exceptionnelle, couture parfaite. Je recommande vivement !",date:"2 jours"},
   {id:2,productId:1,author:"Moussa D.",avatar:"👨🏾",rating:5,text:"Magnifique boubou, livré rapidement. Vendeur sérieux.",date:"1 semaine"},
@@ -396,12 +401,13 @@ let waveReady=!!(wavePhone&&waveName);
 let revenue=parseInt(localStorage.getItem("ndekk_revenue")||"47000");
 let boostHistory=JSON.parse(localStorage.getItem("ndekk_history")||'[{"vendor":"Fatou Couture","plan":"⭐ Vedette","amount":3000,"date":"08 Avr"},{"vendor":"Tech Mbaye","plan":"💎 Premium","amount":12000,"date":"05 Avr"}]');
 
-function saveData(){
+function saveAll(){
   localStorage.setItem("ndekk_wave_phone",wavePhone);
   localStorage.setItem("ndekk_wave_name",waveName);
   localStorage.setItem("ndekk_revenue",revenue);
   localStorage.setItem("ndekk_history",JSON.stringify(boostHistory));
   saveVendors();
+  saveProducts();
 }
 
 // ── LOGO SECRET ────────────────────────────────────────────────────────────────
@@ -421,15 +427,13 @@ function switchMediaTab(tab){
   document.getElementById("photo-section").style.display=tab==="photo"?"block":"none";
   document.getElementById("video-section").style.display=tab==="video"?"block":"none";
 }
-
 function handlePhotoUpload(event){
   const file=event.target.files[0];if(!file)return;
   if(file.size>5*1024*1024){showToast("Photo trop lourde (max 5MB)","error");return;}
   const reader=new FileReader();
-  reader.onload=function(e){currentPhoto=e.target.result;document.getElementById("photo-preview").innerHTML=`<img src="${currentPhoto}" alt="Aperçu"><button class="media-clear" onclick="clearPhoto()">✕ Changer</button>`;};
+  reader.onload=e=>{currentPhoto=e.target.result;document.getElementById("photo-preview").innerHTML=`<img src="${currentPhoto}"><button class="media-clear" onclick="clearPhoto()">✕ Changer</button>`;};
   reader.readAsDataURL(file);showToast("📸 Photo chargée !");
 }
-
 function handleVideoUpload(event){
   const file=event.target.files[0];if(!file)return;
   if(file.size>50*1024*1024){showToast("Vidéo trop lourde (max 50MB)","error");return;}
@@ -437,10 +441,9 @@ function handleVideoUpload(event){
   progress.style.display="block";let pct=0;
   const iv=setInterval(()=>{pct+=10;bar.style.width=pct+"%";if(pct>=100)clearInterval(iv);},100);
   const reader=new FileReader();
-  reader.onload=function(e){currentVideo=e.target.result;document.getElementById("video-preview").innerHTML=`<video src="${currentVideo}" controls style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></video><button class="media-clear" onclick="clearVideo()">✕ Changer</button>`;setTimeout(()=>{progress.style.display="none";bar.style.width="0%";},1100);showToast("🎥 Vidéo chargée !");};
+  reader.onload=e=>{currentVideo=e.target.result;document.getElementById("video-preview").innerHTML=`<video src="${currentVideo}" controls style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></video><button class="media-clear" onclick="clearVideo()">✕ Changer</button>`;setTimeout(()=>{progress.style.display="none";bar.style.width="0%";},1100);showToast("🎥 Vidéo chargée !");};
   reader.readAsDataURL(file);
 }
-
 function clearPhoto(){currentPhoto=null;document.getElementById("photo-preview").innerHTML=`<div class="media-upload-text"><div class="media-upload-icon">📸</div>Clique pour ajouter une photo<br><span style="font-size:0.7rem;opacity:0.6">JPG, PNG — max 5MB</span></div><input type="file" id="photo-input" accept="image/*" onchange="handlePhotoUpload(event)" style="display:none">`;}
 function clearVideo(){currentVideo=null;document.getElementById("video-preview").innerHTML=`<div class="media-upload-text"><div class="media-upload-icon">🎥</div>Clique pour ajouter une vidéo<br><span style="font-size:0.7rem;opacity:0.6">MP4, MOV — max 50MB</span></div><input type="file" id="video-input" accept="video/*" onchange="handleVideoUpload(event)" style="display:none">`;}
 
@@ -470,12 +473,13 @@ function goTo(page){
 function productCard(p,onclick){
   const v=vendorOf(p.vendorId);
   const badge=p.boosted?`<span class="pcard-badge ${p.boostType==="premium"?"badge-purple":"badge-gold"}">${p.boostType==="premium"?"💎":"⭐"}</span>`:"";
+  const newBadge=!p.isDefault?`<span class="new-badge">NOUVEAU</span>`:"";
   let thumb,vidBadge="";
   if(p.video){thumb=`<video src="${p.video}" muted playsinline style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></video>`;vidBadge=`<span class="video-badge">▶ Vidéo</span>`;}
   else if(p.photo){thumb=`<img src="${p.photo}" alt="${p.name}">`;}
   else{thumb=`<span>${p.emoji||"📦"}</span>`;}
   return `<div class="pcard ${p.boosted?"boosted":""}" onclick="${onclick}">
-    <div class="pcard-thumb">${thumb}${badge}${vidBadge}</div>
+    <div class="pcard-thumb">${thumb}${badge}${vidBadge}${newBadge}</div>
     <div class="pcard-body">
       <div class="pcard-vendor">${v.avatar||""} ${v.name||""}</div>
       <div class="pcard-name">${p.name}</div>
@@ -509,7 +513,11 @@ function vendorCard(v,onclick){
 
 function renderHome(){
   document.getElementById("stat-vendors").textContent=vendors.length.toLocaleString("fr-FR");
-  document.getElementById("home-products").innerHTML=[...products].sort((a,b)=>(b.boosted?1:0)-(a.boosted?1:0)).filter(p=>p.boosted).map(p=>productCard(p,`openProduct(${p.id})`)).join("");
+  document.getElementById("stat-products").textContent=products.length.toLocaleString("fr-FR");
+  const boosted=[...products].sort((a,b)=>(b.boosted?1:0)-(a.boosted?1:0)).filter(p=>p.boosted);
+  const recent=products.filter(p=>!p.isDefault).slice(0,4);
+  const toShow=boosted.length>0?boosted:recent.length>0?recent:products.slice(0,4);
+  document.getElementById("home-products").innerHTML=toShow.map(p=>productCard(p,`openProduct(${p.id})`)).join("");
   document.getElementById("home-vendors").innerHTML=vendors.filter(v=>v.verified).map(v=>vendorCard(v,`openVendor(${v.id})`)).join("");
 }
 
@@ -551,7 +559,7 @@ function openVendor(id){
 }
 
 function openProduct(id){
-  const p=products.find(x=>x.id===id);
+  const p=products.find(x=>x.id===id);if(!p)return;
   const v=vendorOf(p.vendorId);
   const rev=reviews.filter(r=>r.productId===id);
   let mediaSection="";
@@ -562,6 +570,7 @@ function openProduct(id){
     <button onclick="goTo('market')" style="background:none;border:none;color:var(--text3);font-size:0.78rem;cursor:pointer;margin-bottom:16px;font-family:'DM Sans',sans-serif">← Retour</button>
     ${mediaSection}
     ${p.boosted?`<div style="margin-bottom:10px"><span class="badge">${p.boostType==="premium"?"💎 Vendeur Premium":"⭐ Produit Vedette"}</span></div>`:""}
+    ${!p.isDefault?`<div style="margin-bottom:10px"><span class="badge" style="background:rgba(80,200,120,0.15);color:var(--success);border-color:rgba(80,200,120,0.3)">✨ Nouveau produit</span></div>`:""}
     <h1 style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;margin-bottom:6px;line-height:1.15">${p.name}</h1>
     <div style="margin-bottom:8px"><span class="stars">${stars(p.rating)}</span> <span style="font-size:0.72rem;color:var(--text3)">${p.reviews} avis</span></div>
     <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--gold);font-weight:700;margin-bottom:16px">${fmt(p.price)} FCFA</div>
@@ -575,7 +584,7 @@ function openProduct(id){
     <button class="btn-primary" style="width:100%;padding:13px" onclick="addCart(${p.id})">Ajouter au panier</button>
     <div style="margin-top:28px">
       <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;margin-bottom:12px">Avis (${rev.length})</div>
-      ${rev.length===0?'<p style="color:var(--text3);font-size:0.82rem">Aucun avis.</p>':rev.map(r=>`
+      ${rev.length===0?'<p style="color:var(--text3);font-size:0.82rem">Aucun avis pour ce produit.</p>':rev.map(r=>`
         <div style="background:var(--surface);border:1px solid var(--border2);border-radius:11px;padding:14px;margin-bottom:9px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
             <span style="font-size:1.2rem">${r.avatar}</span>
@@ -602,7 +611,6 @@ function switchAuth(mode){
   document.getElementById("tab-register").classList.toggle("active",mode==="register");
   renderAvatarPicker();
 }
-
 function renderAvatarPicker(){document.getElementById("avatar-picker").innerHTML=["👩🏾","👨🏾","👩🏾‍💼","👨🏾‍💼","👩🏾‍🍳","👨🏾‍🎨"].map(a=>`<div class="av-opt ${selectedAvatar===a?"sel":""}" onclick="selectAvatar('${a}')">${a}</div>`).join("");}
 function selectAvatar(a){selectedAvatar=a;renderAvatarPicker();}
 
@@ -612,11 +620,10 @@ function handleAuth(){
     const name=document.getElementById("auth-name").value.trim();
     const city=document.getElementById("auth-city").value;
     if(!name||!phone){showToast("Remplis tous les champs","error");return;}
-    // Vérifier si le numéro existe déjà
     if(vendors.find(v=>v.phone===phone)){showToast("Ce numéro est déjà enregistré. Connecte-toi !","error");switchAuth("login");return;}
     const nv={id:Date.now(),name,phone,city,avatar:selectedAvatar,bio:"Nouveau vendeur sur Ndëkk Market 🇸🇳",verified:false,premium:false,sales:0,rating:5.0,joined:"Avr 2026"};
     vendors.push(nv);
-    saveVendors(); // ✅ SAUVEGARDE IMMÉDIATE
+    saveVendors();
     currentUser=nv;
     showToast("🎉 Compte créé ! Bienvenue "+name+" !");
   } else {
@@ -633,7 +640,7 @@ function handleAuth(){
 }
 
 // ── CART ───────────────────────────────────────────────────────────────────────
-function addCart(id){const p=products.find(x=>x.id===id);cart.push(p);updateCartBadge();showToast((p.emoji||"📦")+" "+p.name+" ajouté !");}
+function addCart(id){const p=products.find(x=>x.id===id);if(!p)return;cart.push(p);updateCartBadge();showToast((p.emoji||"📦")+" "+p.name+" ajouté !");}
 
 function openCart(){
   const total=cart.reduce((a,b)=>a+b.price,0);
@@ -655,9 +662,7 @@ function openCart(){
   document.getElementById("cart-title").textContent="🛒 Panier ("+cart.length+")";
   document.getElementById("modal-cart").classList.add("open");
 }
-
 function removeCart(i){cart.splice(i,1);updateCartBadge();openCart();}
-
 function payCart(){
   if(!waveReady){showToast("Configure Wave dans Admin","error");closeModal("modal-cart");return;}
   const total=cart.reduce((a,b)=>a+b.price,0);
@@ -675,14 +680,13 @@ function openBoostModal(id){
     <div style="font-size:0.68rem;color:var(--text3);margin-top:2px">${currentBoost.label} · par ${currentBoost.period}</div>`;
   document.getElementById("modal-boost").classList.add("open");
 }
-
 function confirmBoost(){
   if(!waveReady){showToast("Configure Wave dans Admin","error");closeModal("modal-boost");return;}
   window.open(waveLink(wavePhone,waveName,currentBoost.price,currentBoost.label),"_blank");
   const d=new Date(),months=["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
   revenue+=currentBoost.price;
   boostHistory.unshift({vendor:currentUser?.name||"Vendeur",plan:currentBoost.label,amount:currentBoost.price,date:d.getDate()+" "+months[d.getMonth()]});
-  saveData();showToast("✅ Paiement Wave de "+fmt(currentBoost.price)+" FCFA");closeModal("modal-boost");
+  saveAll();showToast("✅ Paiement Wave de "+fmt(currentBoost.price)+" FCFA");closeModal("modal-boost");
   if(adminUnlocked)renderAdmin();
 }
 
@@ -704,6 +708,15 @@ function renderVendeurSpace(){
       <div style="font-size:0.78rem;color:var(--text2);margin-bottom:11px">${b.desc}</div>
       <button style="width:100%;padding:8px;border:none;border-radius:8px;background:${b.color};color:#0A0A0A;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:'DM Sans',sans-serif">🌊 Payer via Wave</button>
     </div>`).join("");
+
+  // Afficher les produits du vendeur connecté
+  const myProds = products.filter(p => p.vendorId === currentUser.id);
+  const myProdsEl = document.getElementById("my-products");
+  if(myProds.length === 0){
+    myProdsEl.innerHTML = `<p style="color:var(--text3);font-size:0.82rem;grid-column:1/-1">Tu n'as pas encore publié de produit.</p>`;
+  } else {
+    myProdsEl.innerHTML = myProds.map(p => productCard(p, `openProduct(${p.id})`)).join("");
+  }
 }
 
 function postProduct(){
@@ -712,11 +725,28 @@ function postProduct(){
   if(!name||!price){showToast("Nom et prix requis","error");return;}
   const photo=currentMediaTab==="photo"?currentPhoto:null;
   const video=currentMediaTab==="video"?currentVideo:null;
-  products.unshift({id:products.length+1,name,price:parseInt(price),vendorId:currentUser?.id||1,category:document.getElementById("p-cat").value,emoji:document.getElementById("p-emoji").value||"📦",photo,video,rating:5.0,reviews:0,boosted:false,stock:parseInt(document.getElementById("p-stock").value)||10});
-  document.getElementById("p-name").value="";document.getElementById("p-price").value="";
-  document.getElementById("p-emoji").value="";document.getElementById("p-stock").value="";
+  const newProd={
+    id: Date.now(),
+    name, price:parseInt(price),
+    vendorId: currentUser.id,
+    category: document.getElementById("p-cat").value,
+    emoji: document.getElementById("p-emoji").value||"📦",
+    photo, video,
+    rating:5.0, reviews:0,
+    boosted:false, stock:parseInt(document.getElementById("p-stock").value)||10,
+    isDefault: false
+  };
+  products.unshift(newProd);
+  saveProducts(); // ✅ SAUVEGARDE IMMÉDIATE
+  document.getElementById("p-name").value="";
+  document.getElementById("p-price").value="";
+  document.getElementById("p-emoji").value="";
+  document.getElementById("p-stock").value="";
   currentPhoto=null;currentVideo=null;clearPhoto();clearVideo();
-  showToast("🚀 Produit publié !");
+  // Rafraîchir la liste "Mes produits"
+  const myProds=products.filter(p=>p.vendorId===currentUser.id);
+  document.getElementById("my-products").innerHTML=myProds.map(p=>productCard(p,`openProduct(${p.id})`)).join("");
+  showToast("🚀 Produit publié et sauvegardé !");
 }
 
 // ── ADMIN ──────────────────────────────────────────────────────────────────────
@@ -724,15 +754,12 @@ function renderAdminPage(){
   if(adminUnlocked){document.getElementById("admin-lock-screen").style.display="none";document.getElementById("admin-dashboard").style.display="block";renderAdmin();}
   else{document.getElementById("admin-lock-screen").style.display="block";document.getElementById("admin-dashboard").style.display="none";}
 }
-
 function checkAdminPwd(){
   const pwd=document.getElementById("admin-pwd").value;
   if(pwd===ADMIN_PWD){adminUnlocked=true;document.getElementById("admin-lock-screen").style.display="none";document.getElementById("admin-dashboard").style.display="block";renderAdmin();showToast("✅ Bienvenue dans ton Admin !");}
   else{showToast("❌ Mot de passe incorrect","error");document.getElementById("admin-pwd").value="";}
 }
-
 function lockAdmin(){adminUnlocked=false;renderAdminPage();showToast("🔒 Admin verrouillé");}
-
 function renderAdmin(){
   document.getElementById("wave-config-box").innerHTML=`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
@@ -753,7 +780,7 @@ function renderAdmin(){
   document.getElementById("kpi-row").innerHTML=`
     <div class="kpi"><strong>${fmt(revenue)} F</strong><span>Revenus boosts</span></div>
     <div class="kpi"><strong>${products.filter(p=>p.boosted).length}</strong><span>Boostés</span></div>
-    <div class="kpi"><strong>${products.length}</strong><span>Produits</span></div>
+    <div class="kpi"><strong>${products.length}</strong><span>Total produits</span></div>
     <div class="kpi"><strong>${vendors.length}</strong><span>Vendeurs inscrits</span></div>`;
   document.getElementById("boost-history").innerHTML=boostHistory.map(item=>`
     <div class="table-row">
@@ -763,12 +790,11 @@ function renderAdmin(){
       <span style="color:var(--text3);font-size:0.7rem">${item.date}</span>
     </div>`).join("");
 }
-
 function saveWave(){
   const n=document.getElementById("w-name").value.trim();
   const p=document.getElementById("w-phone").value.trim();
   if(!n||!p){showToast("Remplis les deux champs","error");return;}
-  waveName=n;wavePhone=p;waveReady=true;saveData();
+  waveName=n;wavePhone=p;waveReady=true;saveAll();
   showToast("✅ Wave sauvegardé définitivement !");renderAdmin();
 }
 

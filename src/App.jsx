@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const SUPABASE_URL = "https://kvkgyewtzzmizlhyxrhf.supabase.co";
 const SUPABASE_KEY = "sb_publishable_GdWYueDCHhWcThqF0RqCQg_EPSl-GdJ";
 
-async function supabase(table, method = "GET", body = null, filters = "") {
+async function db(table, method = "GET", body = null, filters = "") {
   const url = `${SUPABASE_URL}/rest/v1/${table}${filters}`;
   const res = await fetch(url, {
     method,
@@ -11,12 +11,11 @@ async function supabase(table, method = "GET", body = null, filters = "") {
       "apikey": SUPABASE_KEY,
       "Authorization": `Bearer ${SUPABASE_KEY}`,
       "Content-Type": "application/json",
-      "Prefer": method === "POST" ? "return=representation" : "",
+      "Prefer": method === "POST" ? "return=representation" : method === "PATCH" ? "return=representation" : "",
     },
     body: body ? JSON.stringify(body) : null,
   });
   if (!res.ok) throw new Error(await res.text());
-  if (method === "DELETE") return null;
   const text = await res.text();
   return text ? JSON.parse(text) : null;
 }
@@ -54,7 +53,7 @@ function Badge({ children, color = "#C9A84C" }) {
 }
 
 function Loader() {
-  return <div style={{ textAlign: "center", padding: 40, color: "#C9A84C", fontSize: "1.5rem" }}>⏳</div>;
+  return <div style={{ textAlign: "center", padding: 40, color: "#C9A84C", fontSize: "2rem" }}>⏳</div>;
 }
 
 export default function NdekkMarket() {
@@ -67,12 +66,14 @@ export default function NdekkMarket() {
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [showBoostModal, setShowBoostModal] = useState(null);
+  const [showMsgModal, setShowMsgModal] = useState(null); // product pour envoyer message
   const [products, setProducts] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
-  const [revenue, setRevenue] = useState(47000);
+  const [revenue, setRevenue] = useState(0);
   const [wavePhone, setWavePhone] = useState("");
   const [waveName, setWaveName] = useState("");
   const [waveReady, setWaveReady] = useState(false);
@@ -80,32 +81,37 @@ export default function NdekkMarket() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authForm, setAuthForm] = useState({ name: "", phone: "", city: "Dakar", avatar: "👤" });
   const [boostHistory, setBoostHistory] = useState([]);
+  const [msgForm, setMsgForm] = useState({ buyer_name: "", buyer_phone: "", content: "" });
+  const [replyText, setReplyText] = useState("");
+  const [selectedMsg, setSelectedMsg] = useState(null);
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Charger les données depuis Supabase
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     setLoading(true);
     try {
       const [v, p, r] = await Promise.all([
-        supabase("vendors", "GET", null, "?order=created_at.desc"),
-        supabase("products", "GET", null, "?order=boosted.desc,created_at.desc"),
-        supabase("reviews", "GET", null, "?order=created_at.desc"),
+        db("vendors", "GET", null, "?order=created_at.desc"),
+        db("products", "GET", null, "?order=boosted.desc,created_at.desc"),
+        db("reviews", "GET", null, "?order=created_at.desc"),
       ]);
       setVendors(v || []);
       setProducts(p || []);
       setReviews(r || []);
-    } catch (e) {
-      showToast("Erreur de chargement", "error");
-    }
+    } catch (e) { showToast("Erreur de chargement", "error"); }
     setLoading(false);
+  };
+
+  const loadMessages = async (vendorId) => {
+    try {
+      const msgs = await db("messages", "GET", null, `?vendor_id=eq.${vendorId}&order=created_at.desc`);
+      setMessages(msgs || []);
+    } catch (e) { showToast("Erreur messages", "error"); }
   };
 
   const sorted = [...products].sort((a, b) => (b.boosted ? 1 : 0) - (a.boosted ? 1 : 0));
@@ -119,14 +125,15 @@ export default function NdekkMarket() {
   const reviewsOf = (pid) => reviews.filter(r => r.product_id === pid);
   const addCart = (p) => { setCart(c => [...c, p]); showToast(`${p.emoji} Ajouté au panier`); };
   const cartTotal = cart.reduce((a, b) => a + b.price, 0);
+  const unreadCount = messages.filter(m => !m.read).length;
 
   const handleAuth = async () => {
     if (authMode === "register") {
       if (!authForm.name || !authForm.phone) { showToast("Remplis tous les champs", "error"); return; }
       try {
-        const existing = await supabase("vendors", "GET", null, `?phone=eq.${authForm.phone}`);
+        const existing = await db("vendors", "GET", null, `?phone=eq.${authForm.phone}`);
         if (existing && existing.length > 0) { showToast("Ce numéro existe déjà", "error"); return; }
-        const result = await supabase("vendors", "POST", {
+        const result = await db("vendors", "POST", {
           name: authForm.name, phone: authForm.phone, city: authForm.city,
           avatar: authForm.avatar, bio: "Nouveau vendeur sur Ndëkk Market.",
           verified: false, premium: false, sales: 0, rating: 5.0,
@@ -141,14 +148,51 @@ export default function NdekkMarket() {
       } catch (e) { showToast("Erreur d'inscription", "error"); }
     } else {
       try {
-        const found = await supabase("vendors", "GET", null, `?phone=eq.${authForm.phone}`);
+        const found = await db("vendors", "GET", null, `?phone=eq.${authForm.phone}`);
         if (found && found.length > 0) {
           setCurrentUser(found[0]);
+          await loadMessages(found[0].id);
           showToast(`👋 Content de te revoir, ${found[0].name} !`);
           setView("vendeur-space");
         } else showToast("Numéro introuvable", "error");
       } catch (e) { showToast("Erreur de connexion", "error"); }
     }
+  };
+
+  const sendMessage = async () => {
+    if (!msgForm.buyer_name || !msgForm.content) { showToast("Remplis tous les champs", "error"); return; }
+    try {
+      const v = vendorOf(showMsgModal.vendor_id);
+      await db("messages", "POST", {
+        vendor_id: showMsgModal.vendor_id,
+        buyer_name: msgForm.buyer_name,
+        buyer_phone: msgForm.buyer_phone,
+        product_id: showMsgModal.id,
+        content: msgForm.content,
+        read: false,
+      });
+      setMsgForm({ buyer_name: "", buyer_phone: "", content: "" });
+      setShowMsgModal(null);
+      showToast(`✅ Message envoyé à ${v?.name} !`);
+    } catch (e) { showToast("Erreur envoi message", "error"); }
+  };
+
+  const sendReply = async (msgId) => {
+    if (!replyText.trim()) return;
+    try {
+      await db("messages", "PATCH", { reply: replyText, read: true }, `?id=eq.${msgId}`);
+      setMessages(msgs => msgs.map(m => m.id === msgId ? { ...m, reply: replyText, read: true } : m));
+      setReplyText("");
+      setSelectedMsg(null);
+      showToast("✅ Réponse envoyée !");
+    } catch (e) { showToast("Erreur réponse", "error"); }
+  };
+
+  const markRead = async (msgId) => {
+    try {
+      await db("messages", "PATCH", { read: true }, `?id=eq.${msgId}`);
+      setMessages(msgs => msgs.map(m => m.id === msgId ? { ...m, read: true } : m));
+    } catch (e) {}
   };
 
   const payBoost = async (plan) => {
@@ -165,7 +209,7 @@ export default function NdekkMarket() {
   const postProduct = async () => {
     if (!newProduct.name || !newProduct.price) { showToast("Nom et prix requis", "error"); return; }
     try {
-      const result = await supabase("products", "POST", {
+      const result = await db("products", "POST", {
         name: newProduct.name, price: parseInt(newProduct.price),
         vendor_id: currentUser?.id, category: newProduct.category,
         emoji: newProduct.emoji || "📦", rating: 5.0, reviews: 0,
@@ -179,7 +223,6 @@ export default function NdekkMarket() {
     } catch (e) { showToast("Erreur de publication", "error"); }
   };
 
-  // Styles
   const G = {
     wrap: { background: "#0A0A0A", minHeight: "100vh", overflowX: "hidden", width: "100%", maxWidth: "100vw" },
     page: { padding: "20px 16px", maxWidth: 700, margin: "0 auto", overflowX: "hidden" },
@@ -194,7 +237,7 @@ export default function NdekkMarket() {
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { overflow-x: hidden; max-width: 100vw; }
-        input, select, button { font-family: 'DM Sans', sans-serif; }
+        input, select, button, textarea { font-family: 'DM Sans', sans-serif; }
         .cats-scroll { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .cats-scroll::-webkit-scrollbar { display: none; }
         .cat-pill { flex-shrink: 0; padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.2); background: #111; cursor: pointer; font-size: 0.78rem; font-weight: 500; color: #A09080; white-space: nowrap; }
@@ -218,19 +261,22 @@ export default function NdekkMarket() {
         .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 22px; }
         .kpi { background: #111; border: 1px solid rgba(255,255,255,0.06); border-radius: 11px; padding: 16px; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; display: flex; align-items: flex-end; justify-content: center; }
-        .modal { background: #111; border: 1px solid rgba(201,168,76,0.15); border-radius: 20px 20px 0 0; padding: 22px 18px; width: 100%; max-width: 500px; max-height: 88vh; overflow-y: auto; }
+        .modal { background: #111; border: 1px solid rgba(201,168,76,0.15); border-radius: 20px 20px 0 0; padding: 22px 18px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .msg-card { background: #1A1A1A; border-radius: 12px; padding: 14px; margin-bottom: 10px; border-left: 3px solid; cursor: pointer; transition: all 0.2s; }
+        .msg-card:hover { background: #222; }
+        .msg-card.unread { border-left-color: #C9A84C; }
+        .msg-card.read { border-left-color: #333; }
+        .msg-bubble { background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.15); border-radius: 12px 12px 12px 3px; padding: 11px 14px; margin-bottom: 8px; }
+        .reply-bubble { background: rgba(80,200,120,0.08); border: 1px solid rgba(80,200,120,0.15); border-radius: 12px 12px 3px 12px; padding: 11px 14px; margin-top: 8px; text-align: right; }
         .table-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem; align-items: center; }
-        .review-card { background: #111; border: 1px solid rgba(255,255,255,0.06); border-radius: 11px; padding: 14px; margin-bottom: 9px; }
         .toast-wrap { position: fixed; bottom: 24px; left: 0; right: 0; display: flex; justify-content: center; z-index: 999; pointer-events: none; }
-        .toast { padding: 10px 20px; border-radius: 50px; font-size: 0.82rem; font-weight: 500; border: 1px solid; white-space: nowrap; }
+        .toast { padding: 10px 20px; border-radius: 50px; font-size: 0.82rem; font-weight: 500; border: 1px solid; white-space: nowrap; animation: fadeUp 0.25s ease; }
         .toast.success { background: rgba(80,200,120,0.1); color: #50C878; border-color: rgba(80,200,120,0.2); }
         .toast.error { background: rgba(224,80,80,0.1); color: #E05050; border-color: rgba(224,80,80,0.2); }
         @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-        .toast { animation: fadeUp 0.25s ease; }
         .auth-tabs { display: flex; background: #1A1A1A; border-radius: 10px; padding: 3px; margin-bottom: 22px; }
         .auth-tab { flex: 1; padding: 8px; border-radius: 8px; border: none; background: none; color: #A09080; font-size: 0.82rem; font-weight: 500; cursor: pointer; }
         .auth-tab.active { background: #222; color: #F5F0E8; }
-        .avatar-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px; }
         .av-opt { width: 38px; height: 38px; border-radius: 9px; background: #1A1A1A; border: 2px solid rgba(255,255,255,0.06); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
         .av-opt.sel { border-color: #C9A84C; background: rgba(201,168,76,0.1); }
         .form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -239,10 +285,13 @@ export default function NdekkMarket() {
         .btn-ghost { background: none; border: 1px solid rgba(201,168,76,0.2); color: #A09080; padding: 7px 14px; border-radius: 9px; font-weight: 500; font-size: 0.78rem; cursor: pointer; }
         .btn-wave { background: #0066CC; color: white; border: none; padding: 11px; border-radius: 9px; font-weight: 700; font-size: 0.88rem; cursor: pointer; flex: 2; }
         .btn-cancel { background: none; border: 1px solid rgba(255,255,255,0.08); color: #A09080; padding: 11px; border-radius: 9px; font-weight: 500; font-size: 0.85rem; cursor: pointer; flex: 1; }
+        .btn-msg { background: rgba(201,168,76,0.1); color: #C9A84C; border: 1px solid rgba(201,168,76,0.3); padding: 10px; border-radius: 9px; font-weight: 600; font-size: 0.85rem; cursor: pointer; width: 100%; margin-top: 10px; }
         .modal-btns { display: flex; gap: 9px; margin-top: 14px; }
         .cart-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .empty-state { text-align: center; padding: 60px 20px; color: #6A5A4A; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #6A5A4A; }
         .empty-state div { font-size: 3rem; margin-bottom: 12px; }
+        .notif-dot { width: 8px; height: 8px; background: #C9A84C; border-radius: 50%; display: inline-block; margin-left: 5px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
       `}</style>
 
       {/* NAV */}
@@ -254,7 +303,7 @@ export default function NdekkMarket() {
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {currentUser
-              ? <span style={{ fontSize: "0.78rem", color: "#A09080" }}>{currentUser.avatar}</span>
+              ? <span style={{ fontSize: "0.78rem", color: "#A09080" }}>{currentUser.avatar} {currentUser.name.split(" ")[0]}</span>
               : <button className="btn-ghost" onClick={() => { setAuthMode("register"); setView("auth"); }}>Vendre</button>
             }
             <button className="btn-ghost" style={{ padding: "6px 12px", position: "relative" }} onClick={() => setShowCart(true)}>
@@ -268,11 +317,15 @@ export default function NdekkMarket() {
             { id: "home", label: "Accueil" },
             { id: "market", label: "Marché" },
             { id: "vendors", label: "Vendeurs" },
-            ...(currentUser ? [{ id: "vendeur-space", label: "Mon Espace" }] : []),
+            ...(currentUser ? [{ id: "vendeur-space", label: "Mon Espace" }, { id: "messages", label: unreadCount > 0 ? `💬 ${unreadCount}` : "💬 Messages" }] : []),
             { id: "admin", label: "Admin" },
           ].map(t => (
-            <button key={t.id} onClick={() => setView(t.id)} style={{ flexShrink: 0, background: view === t.id ? "rgba(201,168,76,0.12)" : "none", border: "none", color: view === t.id ? "#C9A84C" : "#6A5A4A", padding: "5px 12px", borderRadius: 8, cursor: "pointer", fontSize: "0.78rem", fontWeight: 500, whiteSpace: "nowrap" }}>
+            <button key={t.id} onClick={() => {
+              setView(t.id);
+              if (t.id === "messages" && currentUser) loadMessages(currentUser.id);
+            }} style={{ flexShrink: 0, background: view === t.id ? "rgba(201,168,76,0.12)" : "none", border: "none", color: view === t.id ? "#C9A84C" : "#6A5A4A", padding: "5px 12px", borderRadius: 8, cursor: "pointer", fontSize: "0.78rem", fontWeight: 500, whiteSpace: "nowrap" }}>
               {t.label}
+              {t.id === "messages" && unreadCount > 0 && <span className="notif-dot" />}
             </button>
           ))}
         </div>
@@ -290,7 +343,7 @@ export default function NdekkMarket() {
                   <h1 style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "clamp(2.2rem,8vw,4.5rem)", fontWeight: 700, color: "#F5F0E8", lineHeight: 1.08, marginBottom: 14 }}>
                     Le marché de chez nous,<br /><em style={{ color: "#C9A84C" }}>en ligne.</em>
                   </h1>
-                  <p style={{ color: "#6A5A4A", fontSize: "0.9rem", maxWidth: 340, margin: "0 auto 28px", lineHeight: 1.65, fontWeight: 300 }}>
+                  <p style={{ color: "#6A5A4A", fontSize: "0.9rem", maxWidth: 340, margin: "0 auto 28px", lineHeight: 1.65 }}>
                     Achetez et vendez localement. Mode, alimentation, électronique — tout depuis votre ville.
                   </p>
                   <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
@@ -304,7 +357,7 @@ export default function NdekkMarket() {
                 {[[vendors.length || "0", "Vendeurs"], [products.length || "0", "Produits"], ["98%", "Satisfaction"], ["Wave", "Paiement"]].map(([v, l]) => (
                   <div key={l} style={{ textAlign: "center", padding: "16px 4px", borderRight: "1px solid rgba(201,168,76,0.08)" }}>
                     <div style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "1.4rem", fontWeight: 700, color: "#C9A84C" }}>{v}</div>
-                    <div style={{ fontSize: "0.62rem", color: "#6A5A4A", letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 2 }}>{l}</div>
+                    <div style={{ fontSize: "0.62rem", color: "#6A5A4A", textTransform: "uppercase", marginTop: 2 }}>{l}</div>
                   </div>
                 ))}
               </div>
@@ -315,7 +368,7 @@ export default function NdekkMarket() {
                   <button onClick={() => setView("market")} style={{ background: "none", border: "none", color: "#C9A84C", fontSize: "0.78rem", cursor: "pointer" }}>Voir tout →</button>
                 </div>
                 {products.filter(p => p.boosted).length === 0
-                  ? <div className="empty-state"><div>🛍️</div><p>Aucun produit en vedette pour l'instant</p></div>
+                  ? <div className="empty-state"><div>🛍️</div><p>Aucun produit en vedette</p></div>
                   : <div className="prod-grid">
                     {products.filter(p => p.boosted).map(p => {
                       const v = vendorOf(p.vendor_id);
@@ -323,18 +376,13 @@ export default function NdekkMarket() {
                         <div className="pcard boosted" key={p.id} onClick={() => { setSelectedProduct(p); setView("product"); }}>
                           <div className="pcard-thumb">
                             <span>{p.emoji}</span>
-                            <span className="pcard-badge" style={{ background: p.boost_type === "premium" ? "#A78BFA" : "#C9A84C", color: "#0A0A0A" }}>
-                              {p.boost_type === "premium" ? "💎" : "⭐"}
-                            </span>
+                            <span className="pcard-badge" style={{ background: p.boost_type === "premium" ? "#A78BFA" : "#C9A84C", color: "#0A0A0A" }}>{p.boost_type === "premium" ? "💎" : "⭐"}</span>
                           </div>
                           <div className="pcard-body">
                             <div className="pcard-vendor">{v?.avatar} {v?.name}</div>
                             <div className="pcard-name">{p.name}</div>
                             <div className="pcard-price">{p.price?.toLocaleString("fr-FR")} F</div>
-                            <div className="pcard-foot">
-                              <Stars rating={p.rating} />
-                              <button className="add-btn" onClick={e => { e.stopPropagation(); addCart(p); }}>+</button>
-                            </div>
+                            <div className="pcard-foot"><Stars rating={p.rating} /><button className="add-btn" onClick={e => { e.stopPropagation(); addCart(p); }}>+</button></div>
                           </div>
                         </div>
                       );
@@ -346,25 +394,22 @@ export default function NdekkMarket() {
                   <div className="sec-title" style={{ marginBottom: 0 }}>Vendeurs</div>
                   <button onClick={() => setView("vendors")} style={{ background: "none", border: "none", color: "#C9A84C", fontSize: "0.78rem", cursor: "pointer" }}>Voir tous →</button>
                 </div>
-                {vendors.length === 0
-                  ? <div className="empty-state"><div>🏪</div><p>Aucun vendeur encore</p></div>
-                  : vendors.slice(0, 3).map(v => (
-                    <div className={`vcard ${v.premium ? "premium" : ""}`} key={v.id} onClick={() => { setSelectedVendor(v); setView("vendor-profile"); }}>
-                      <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                        <div style={{ width: 46, height: 46, background: "#1A1A1A", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.6rem", flexShrink: 0 }}>{v.avatar}</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", marginBottom: 3 }}>
-                            <span style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "1rem", fontWeight: 700, color: "#F5F0E8" }}>{v.name}</span>
-                            {v.verified && <Badge>✓</Badge>}
-                            {v.premium && <Badge color="#A78BFA">💎</Badge>}
-                          </div>
-                          <div style={{ fontSize: "0.72rem", color: "#6A5A4A", marginBottom: 5 }}>📍 {v.city}</div>
-                          <div style={{ fontSize: "0.78rem", color: "#A09080", lineHeight: 1.5 }}>{v.bio}</div>
+                {vendors.slice(0, 3).map(v => (
+                  <div className={`vcard ${v.premium ? "premium" : ""}`} key={v.id} onClick={() => { setSelectedVendor(v); setView("vendor-profile"); }}>
+                    <div style={{ display: "flex", gap: 12 }}>
+                      <div style={{ width: 46, height: 46, background: "#1A1A1A", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.6rem", flexShrink: 0 }}>{v.avatar}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", marginBottom: 3 }}>
+                          <span style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "1rem", fontWeight: 700, color: "#F5F0E8" }}>{v.name}</span>
+                          {v.verified && <Badge>✓</Badge>}
+                          {v.premium && <Badge color="#A78BFA">💎</Badge>}
                         </div>
+                        <div style={{ fontSize: "0.72rem", color: "#6A5A4A" }}>📍 {v.city}</div>
+                        <div style={{ fontSize: "0.78rem", color: "#A09080", marginTop: 4 }}>{v.bio}</div>
                       </div>
                     </div>
-                  ))
-                }
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -398,10 +443,7 @@ export default function NdekkMarket() {
                           <div className="pcard-vendor">{v?.avatar} {v?.name}</div>
                           <div className="pcard-name">{p.name}</div>
                           <div className="pcard-price">{p.price?.toLocaleString("fr-FR")} F</div>
-                          <div className="pcard-foot">
-                            <Stars rating={p.rating} />
-                            <button className="add-btn" onClick={e => { e.stopPropagation(); addCart(p); }}>+</button>
-                          </div>
+                          <div className="pcard-foot"><Stars rating={p.rating} /><button className="add-btn" onClick={e => { e.stopPropagation(); addCart(p); }}>+</button></div>
                         </div>
                       </div>
                     );
@@ -416,7 +458,7 @@ export default function NdekkMarket() {
             <div style={G.page}>
               <div className="sec-title">Tous les vendeurs</div>
               {vendors.length === 0
-                ? <div className="empty-state"><div>🏪</div><p>Aucun vendeur encore — sois le premier !</p></div>
+                ? <div className="empty-state"><div>🏪</div><p>Aucun vendeur encore</p></div>
                 : vendors.map(v => (
                   <div className={`vcard ${v.premium ? "premium" : ""}`} key={v.id} onClick={() => { setSelectedVendor(v); setView("vendor-profile"); }}>
                     <div style={{ display: "flex", gap: 12 }}>
@@ -429,11 +471,6 @@ export default function NdekkMarket() {
                         </div>
                         <div style={{ fontSize: "0.72rem", color: "#6A5A4A", marginBottom: 4 }}>📍 {v.city} · Depuis {v.joined}</div>
                         <div style={{ fontSize: "0.78rem", color: "#A09080" }}>{v.bio}</div>
-                        <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
-                          {[[v.sales, "ventes"], [`⭐ ${v.rating}`, "note"], [products.filter(p => p.vendor_id === v.id).length, "produits"]].map(([val, lab]) => (
-                            <div key={lab} style={{ fontSize: "0.72rem", color: "#6A5A4A" }}><strong style={{ color: "#A09080", display: "block" }}>{val}</strong>{lab}</div>
-                          ))}
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -478,7 +515,7 @@ export default function NdekkMarket() {
             </div>
           )}
 
-          {/* PRODUCT */}
+          {/* PRODUCT DETAIL */}
           {view === "product" && selectedProduct && (
             <div style={G.page}>
               <button onClick={() => setView("market")} style={{ background: "none", border: "none", color: "#6A5A4A", fontSize: "0.78rem", cursor: "pointer", marginBottom: 16 }}>← Retour</button>
@@ -496,14 +533,20 @@ export default function NdekkMarket() {
                   <span style={{ color: "#6A5A4A" }}>→</span>
                 </div>
               ) : null; })()}
-              <div style={{ fontSize: "0.75rem", color: "#6A5A4A", marginBottom: 16 }}>📦 Stock : {selectedProduct.stock} · {selectedProduct.category}</div>
-              <button className="btn-gold" onClick={() => addCart(selectedProduct)}>Ajouter au panier</button>
-              <div style={{ marginTop: 28 }}>
+              <div style={{ fontSize: "0.75rem", color: "#6A5A4A", marginBottom: 14 }}>📦 Stock : {selectedProduct.stock} · {selectedProduct.category}</div>
+
+              {/* Boutons action */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+                <button className="btn-gold" style={{ flex: 1 }} onClick={() => addCart(selectedProduct)}>🛒 Ajouter au panier</button>
+                <button className="btn-msg" style={{ flex: 1, margin: 0 }} onClick={() => setShowMsgModal(selectedProduct)}>💬 Contacter le vendeur</button>
+              </div>
+
+              <div style={{ marginTop: 8 }}>
                 <div className="sec-title" style={{ fontSize: "1.2rem", marginBottom: 12 }}>Avis ({reviewsOf(selectedProduct.id).length})</div>
                 {reviewsOf(selectedProduct.id).length === 0
                   ? <p style={{ color: "#6A5A4A", fontSize: "0.82rem" }}>Aucun avis pour ce produit.</p>
                   : reviewsOf(selectedProduct.id).map(r => (
-                    <div className="review-card" key={r.id}>
+                    <div key={r.id} style={{ background: "#111", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 11, padding: 14, marginBottom: 9 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
                         <span style={{ fontSize: "1.2rem" }}>{r.avatar}</span>
                         <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#F5F0E8" }}>{r.author}</span>
@@ -531,7 +574,7 @@ export default function NdekkMarket() {
                   <>
                     <div style={{ marginBottom: 13 }}>
                       <label style={lbl}>Ton avatar</label>
-                      <div className="avatar-row">
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 5 }}>
                         {["👩🏾","👨🏾","👩🏾‍💼","👨🏾‍💼","👩🏾‍🍳","👨🏾‍🎨"].map(a => (
                           <div key={a} className={`av-opt ${authForm.avatar === a ? "sel" : ""}`} onClick={() => setAuthForm(f => ({ ...f, avatar: a }))}>{a}</div>
                         ))}
@@ -566,6 +609,12 @@ export default function NdekkMarket() {
                   <div style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "1.15rem", fontWeight: 700, color: "#F5F0E8" }}>Bonjour, {currentUser?.name} 👋</div>
                   <div style={{ fontSize: "0.72rem", color: "#6A5A4A" }}>📍 {currentUser?.city}</div>
                 </div>
+                {unreadCount > 0 && (
+                  <div style={{ marginLeft: "auto", background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: 10, padding: "8px 12px", cursor: "pointer" }} onClick={() => { setView("messages"); loadMessages(currentUser.id); }}>
+                    <div style={{ fontSize: "0.7rem", color: "#C9A84C", fontWeight: 700 }}>💬 {unreadCount} nouveau{unreadCount > 1 ? "x" : ""}</div>
+                    <div style={{ fontSize: "0.62rem", color: "#6A5A4A" }}>message{unreadCount > 1 ? "s" : ""}</div>
+                  </div>
+                )}
               </div>
 
               <div className="sec-title" style={{ fontSize: "1.2rem" }}>🚀 Booster ma visibilité</div>
@@ -601,6 +650,57 @@ export default function NdekkMarket() {
                 </div>
                 <button className="btn-gold" onClick={postProduct}>🚀 Publier maintenant</button>
               </div>
+            </div>
+          )}
+
+          {/* MESSAGES */}
+          {view === "messages" && currentUser && (
+            <div style={G.page}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
+                <div className="sec-title" style={{ marginBottom: 0 }}>💬 Mes messages</div>
+                <span style={{ fontSize: "0.72rem", color: "#6A5A4A" }}>{messages.length} message{messages.length !== 1 ? "s" : ""}</span>
+              </div>
+
+              {messages.length === 0
+                ? <div className="empty-state"><div>💬</div><p>Aucun message pour l'instant.<br />Les acheteurs peuvent te contacter depuis les fiches produit.</p></div>
+                : messages.map(m => {
+                  const p = products.find(pr => pr.id === m.product_id);
+                  return (
+                    <div key={m.id} className={`msg-card ${m.read ? "read" : "unread"}`} onClick={() => { setSelectedMsg(selectedMsg?.id === m.id ? null : m); markRead(m.id); }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#F5F0E8" }}>{m.buyer_name}</div>
+                          {m.buyer_phone && <div style={{ fontSize: "0.7rem", color: "#6A5A4A" }}>📞 {m.buyer_phone}</div>}
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          {!m.read && <span style={{ background: "#C9A84C", color: "#0A0A0A", fontSize: "0.6rem", fontWeight: 700, padding: "2px 7px", borderRadius: 20 }}>NOUVEAU</span>}
+                          <div style={{ fontSize: "0.65rem", color: "#6A5A4A", marginTop: 3 }}>{new Date(m.created_at).toLocaleDateString("fr-FR")}</div>
+                        </div>
+                      </div>
+                      {p && <div style={{ fontSize: "0.72rem", color: "#C9A84C", marginBottom: 8 }}>📦 {p.emoji} {p.name}</div>}
+                      <div className="msg-bubble">
+                        <p style={{ fontSize: "0.83rem", color: "#F5F0E8", lineHeight: 1.55 }}>{m.content}</p>
+                      </div>
+                      {m.reply && (
+                        <div className="reply-bubble">
+                          <p style={{ fontSize: "0.78rem", color: "#50C878", lineHeight: 1.5 }}>✅ Ta réponse : {m.reply}</p>
+                        </div>
+                      )}
+                      {selectedMsg?.id === m.id && !m.reply && (
+                        <div style={{ marginTop: 10 }} onClick={e => e.stopPropagation()}>
+                          <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Écrire une réponse..." style={{ ...inp, height: 80, resize: "none" }} />
+                          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                            <button className="btn-cancel" style={{ flex: 1, padding: "8px" }} onClick={() => setSelectedMsg(null)}>Annuler</button>
+                            <button style={{ flex: 2, padding: "8px", background: "#50C878", color: "#0A0A0A", border: "none", borderRadius: 9, fontWeight: 700, cursor: "pointer", fontSize: "0.85rem" }} onClick={() => sendReply(m.id)}>
+                              ✅ Envoyer la réponse
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              }
             </div>
           )}
 
@@ -669,6 +769,29 @@ export default function NdekkMarket() {
             </div>
           )}
         </>
+      )}
+
+      {/* MODAL ENVOYER MESSAGE */}
+      {showMsgModal && (
+        <div className="overlay" onClick={() => setShowMsgModal(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "1.35rem", fontWeight: 700, color: "#F5F0E8", marginBottom: 6 }}>💬 Contacter le vendeur</div>
+            <div style={{ fontSize: "0.78rem", color: "#6A5A4A", marginBottom: 16 }}>
+              À propos de : {showMsgModal.emoji} <strong style={{ color: "#C9A84C" }}>{showMsgModal.name}</strong>
+            </div>
+            <div style={{ marginBottom: 11 }}><label style={lbl}>Ton nom *</label><input style={inp} placeholder="Aminata Diallo" value={msgForm.buyer_name} onChange={e => setMsgForm(f => ({ ...f, buyer_name: e.target.value }))} /></div>
+            <div style={{ marginBottom: 11 }}><label style={lbl}>Ton numéro (optionnel)</label><input style={inp} placeholder="77 123 45 67" value={msgForm.buyer_phone} onChange={e => setMsgForm(f => ({ ...f, buyer_phone: e.target.value }))} /></div>
+            <div style={{ marginBottom: 14 }}><label style={lbl}>Ton message *</label>
+              <textarea value={msgForm.content} onChange={e => setMsgForm(f => ({ ...f, content: e.target.value }))} placeholder="Bonjour, je suis intéressé par ce produit..." style={{ ...inp, height: 100, resize: "none" }} />
+            </div>
+            <div className="modal-btns">
+              <button className="btn-cancel" onClick={() => setShowMsgModal(null)}>Annuler</button>
+              <button style={{ flex: 2, padding: "11px", background: "#C9A84C", color: "#0A0A0A", border: "none", borderRadius: 9, fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }} onClick={sendMessage}>
+                💬 Envoyer le message
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* MODAL BOOST */}

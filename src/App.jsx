@@ -125,6 +125,14 @@ export default function NdekkMarket() {
   const reviewsOf = (pid) => reviews.filter(r => r.product_id === pid);
   const addCart = (p) => { setCart(c => [...c, p]); showToast(`${p.emoji} Ajouté au panier`); };
   const cartTotal = cart.reduce((a, b) => a + b.price, 0);
+
+  const waLink = (product) => {
+    const v = vendorOf(product.vendor_id);
+    if (!v?.phone) return null;
+    const clean = v.phone.replace(/\D/g, "");
+    const msg = `Bonjour ${v.name} 👋\n\nJe suis intéressé(e) par votre produit sur *Ndëkk Market* :\n👉 *${product.emoji} ${product.name}* — ${product.price?.toLocaleString("fr-FR")} FCFA\n\nEst-il toujours disponible ?`;
+    return `https://wa.me/221${clean}?text=${encodeURIComponent(msg)}`;
+  };
   const unreadCount = messages.filter(m => !m.read).length;
 
   const handleAuth = async () => {
@@ -306,7 +314,7 @@ export default function NdekkMarket() {
               ? <span style={{ fontSize: "0.78rem", color: "#A09080" }}>{currentUser.avatar} {currentUser.name.split(" ")[0]}</span>
               : <button className="btn-ghost" onClick={() => { setAuthMode("register"); setView("auth"); }}>Vendre</button>
             }
-            <button className="btn-ghost" style={{ padding: "6px 12px", position: "relative" }} onClick={() => setShowCart(true)}>
+            <button className="btn-ghost" style={{ padding: "6px 12px", display: "none" }} onClick={() => setShowCart(true)}>
               🛒
               {cart.length > 0 && <span style={{ position: "absolute", top: -4, right: -4, background: "#C9A84C", color: "#0A0A0A", borderRadius: "50%", width: 15, height: 15, fontSize: "0.58rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{cart.length}</span>}
             </button>
@@ -382,7 +390,7 @@ export default function NdekkMarket() {
                             <div className="pcard-vendor">{v?.avatar} {v?.name}</div>
                             <div className="pcard-name">{p.name}</div>
                             <div className="pcard-price">{p.price?.toLocaleString("fr-FR")} F</div>
-                            <div className="pcard-foot"><Stars rating={p.rating} /><button className="add-btn" onClick={e => { e.stopPropagation(); addCart(p); }}>+</button></div>
+                            <div className="pcard-foot"><Stars rating={p.rating} />{waLink(p) && <a href={waLink(p)} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{textDecoration:"none"}}><button className="add-btn" style={{background:"rgba(37,211,102,0.1)",color:"#25D366",border:"1px solid rgba(37,211,102,0.3)"}}>💬 WhatsApp</button></a>}</div>
                           </div>
                         </div>
                       );
@@ -443,7 +451,7 @@ export default function NdekkMarket() {
                           <div className="pcard-vendor">{v?.avatar} {v?.name}</div>
                           <div className="pcard-name">{p.name}</div>
                           <div className="pcard-price">{p.price?.toLocaleString("fr-FR")} F</div>
-                          <div className="pcard-foot"><Stars rating={p.rating} /><button className="add-btn" onClick={e => { e.stopPropagation(); addCart(p); }}>+</button></div>
+                          <div className="pcard-foot"><Stars rating={p.rating} />{waLink(p) && <a href={waLink(p)} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{textDecoration:"none"}}><button className="add-btn" style={{background:"rgba(37,211,102,0.1)",color:"#25D366",border:"1px solid rgba(37,211,102,0.3)"}}>💬 WhatsApp</button></a>}</div>
                         </div>
                       </div>
                     );
@@ -506,7 +514,7 @@ export default function NdekkMarket() {
                       <div className="pcard-body">
                         <div className="pcard-name">{p.name}</div>
                         <div className="pcard-price">{p.price?.toLocaleString("fr-FR")} F</div>
-                        <div className="pcard-foot"><Stars rating={p.rating} /><button className="add-btn" onClick={e => { e.stopPropagation(); addCart(p); }}>+</button></div>
+                        <div className="pcard-foot"><Stars rating={p.rating} />{waLink(p) && <a href={waLink(p)} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{textDecoration:"none"}}><button className="add-btn" style={{background:"rgba(37,211,102,0.1)",color:"#25D366",border:"1px solid rgba(37,211,102,0.3)"}}>💬 WhatsApp</button></a>}</div>
                       </div>
                     </div>
                   ))}
@@ -536,9 +544,17 @@ export default function NdekkMarket() {
               <div style={{ fontSize: "0.75rem", color: "#6A5A4A", marginBottom: 14 }}>📦 Stock : {selectedProduct.stock} · {selectedProduct.category}</div>
 
               {/* Boutons action */}
-              <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-                <button className="btn-gold" style={{ flex: 1 }} onClick={() => addCart(selectedProduct)}>🛒 Ajouter au panier</button>
-                <button className="btn-msg" style={{ flex: 1, margin: 0 }} onClick={() => setShowMsgModal(selectedProduct)}>💬 Contacter le vendeur</button>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+                {waLink(selectedProduct) && (
+                  <a href={waLink(selectedProduct)} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+                    <button style={{ width: "100%", padding: "13px", background: "#25D366", color: "white", border: "none", borderRadius: 10, fontWeight: 700, fontSize: "0.95rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                      💬 Contacter le vendeur sur WhatsApp
+                    </button>
+                  </a>
+                )}
+                <button className="btn-msg" style={{ margin: 0 }} onClick={() => setShowMsgModal(selectedProduct)}>
+                  ✉️ Envoyer un message interne
+                </button>
               </div>
 
               <div style={{ marginTop: 8 }}>

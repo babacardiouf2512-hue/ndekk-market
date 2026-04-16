@@ -772,27 +772,52 @@ export default function NdekkMarket() {
       )}
 
       {/* MODAL ENVOYER MESSAGE */}
-      {showMsgModal && (
-        <div className="overlay" onClick={() => setShowMsgModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "1.35rem", fontWeight: 700, color: "#F5F0E8", marginBottom: 6 }}>💬 Contacter le vendeur</div>
-            <div style={{ fontSize: "0.78rem", color: "#6A5A4A", marginBottom: 16 }}>
-              À propos de : {showMsgModal.emoji} <strong style={{ color: "#C9A84C" }}>{showMsgModal.name}</strong>
-            </div>
-            <div style={{ marginBottom: 11 }}><label style={lbl}>Ton nom *</label><input style={inp} placeholder="Aminata Diallo" value={msgForm.buyer_name} onChange={e => setMsgForm(f => ({ ...f, buyer_name: e.target.value }))} /></div>
-            <div style={{ marginBottom: 11 }}><label style={lbl}>Ton numéro (optionnel)</label><input style={inp} placeholder="77 123 45 67" value={msgForm.buyer_phone} onChange={e => setMsgForm(f => ({ ...f, buyer_phone: e.target.value }))} /></div>
-            <div style={{ marginBottom: 14 }}><label style={lbl}>Ton message *</label>
-              <textarea value={msgForm.content} onChange={e => setMsgForm(f => ({ ...f, content: e.target.value }))} placeholder="Bonjour, je suis intéressé par ce produit..." style={{ ...inp, height: 100, resize: "none" }} />
-            </div>
-            <div className="modal-btns">
-              <button className="btn-cancel" onClick={() => setShowMsgModal(null)}>Annuler</button>
-              <button style={{ flex: 2, padding: "11px", background: "#C9A84C", color: "#0A0A0A", border: "none", borderRadius: 9, fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }} onClick={sendMessage}>
-                💬 Envoyer le message
-              </button>
+      {showMsgModal && (() => {
+        const v = vendorOf(showMsgModal.vendor_id);
+        const waLink = v?.phone ? `https://wa.me/221${v.phone.replace(/\D/g,"")}?text=${encodeURIComponent(`Bonjour ${v.name} 👋\n\nJe suis intéressé(e) par votre produit sur Ndëkk Market :\n👉 *${showMsgModal.emoji} ${showMsgModal.name}* — ${showMsgModal.price?.toLocaleString("fr-FR")} FCFA\n\nEst-il toujours disponible ?`)}` : null;
+        return (
+          <div className="overlay" onClick={() => setShowMsgModal(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "1.35rem", fontWeight: 700, color: "#F5F0E8", marginBottom: 6 }}>💬 Contacter le vendeur</div>
+              <div style={{ fontSize: "0.78rem", color: "#6A5A4A", marginBottom: 14 }}>
+                {showMsgModal.emoji} <strong style={{ color: "#C9A84C" }}>{showMsgModal.name}</strong>
+              </div>
+
+              {/* WhatsApp direct */}
+              {waLink && (
+                <a href={waLink} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+                  <div style={{ background: "rgba(37,211,102,0.1)", border: "1px solid rgba(37,211,102,0.3)", borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, marginBottom: 14, cursor: "pointer" }}>
+                    <span style={{ fontSize: "2rem" }}>💬</span>
+                    <div>
+                      <div style={{ fontWeight: 700, color: "#25D366", fontSize: "0.92rem" }}>Contacter sur WhatsApp</div>
+                      <div style={{ fontSize: "0.72rem", color: "#6A5A4A", marginTop: 2 }}>Message automatique prérempli · Réponse rapide</div>
+                    </div>
+                    <span style={{ marginLeft: "auto", color: "#25D366", fontSize: "1.2rem" }}>→</span>
+                  </div>
+                </a>
+              )}
+
+              <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 14px" }}>
+                <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+                <span style={{ fontSize: "0.7rem", color: "#6A5A4A" }}>ou envoyer un message interne</span>
+                <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+              </div>
+
+              <div style={{ marginBottom: 11 }}><label style={lbl}>Ton nom *</label><input style={inp} placeholder="Aminata Diallo" value={msgForm.buyer_name} onChange={e => setMsgForm(f => ({ ...f, buyer_name: e.target.value }))} /></div>
+              <div style={{ marginBottom: 11 }}><label style={lbl}>Ton numéro (optionnel)</label><input style={inp} placeholder="77 123 45 67" value={msgForm.buyer_phone} onChange={e => setMsgForm(f => ({ ...f, buyer_phone: e.target.value }))} /></div>
+              <div style={{ marginBottom: 14 }}><label style={lbl}>Ton message *</label>
+                <textarea value={msgForm.content} onChange={e => setMsgForm(f => ({ ...f, content: e.target.value }))} placeholder="Bonjour, je suis intéressé par ce produit..." style={{ ...inp, height: 90, resize: "none" }} />
+              </div>
+              <div className="modal-btns">
+                <button className="btn-cancel" onClick={() => setShowMsgModal(null)}>Annuler</button>
+                <button style={{ flex: 2, padding: "11px", background: "#C9A84C", color: "#0A0A0A", border: "none", borderRadius: 9, fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }} onClick={sendMessage}>
+                  Envoyer
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* MODAL BOOST */}
       {showBoostModal && (
